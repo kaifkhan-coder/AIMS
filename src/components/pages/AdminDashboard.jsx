@@ -1,0 +1,664 @@
+  import { Bar, BarChart } from "recharts";
+  import { io } from "socket.io-client";
+  import { toast } from "react-hot-toast";
+  import React, { useEffect, useState, useRef } from "react";
+  import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+  import {
+    motion,
+    useMotionValue,
+    useSpring,
+    useTransform,
+  } from "framer-motion";
+  import { useNavigate } from "react-router-dom";
+  import {
+    Users,
+    ShieldCheck,
+    Clock,
+    Briefcase,
+    Mail,
+    Sparkles,
+    LayoutDashboard,
+    LogOut,
+    Activity,
+    Pencil,
+    Trash2,
+    AlertCircle,
+    CheckCircle,
+    XCircle, 
+    Layers,
+  } from "lucide-react";
+  import { deleteStaff } from "../../services/adminService";
+  import CreateStaff from "./CreateStaff";
+  import EditStaff from "./EditStaff";
+  import api from "../../services/api";
+
+  /* ---------------- 3D TILT CARD ---------------- */
+  const TiltCard = ({ children, className = "" }) => {
+    const ref = useRef(null);
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+
+    const mouseX = useSpring(x, { stiffness: 200, damping: 20 });
+    const mouseY = useSpring(y, { stiffness: 200, damping: 20 });
+
+    const rotateX = useTransform(mouseY, [-0.5, 0.5], ["10deg", "-10deg"]);
+    const rotateY = useTransform(mouseX, [-0.5, 0.5], ["-10deg", "10deg"]);
+
+    const handleMouseMove = (e) => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      x.set((e.clientX - rect.left - rect.width / 2) / rect.width);
+      y.set((e.clientY - rect.top - rect.height / 2) / rect.height);
+    };
+
+    return (
+      <motion.div
+        ref={ref}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => {
+          x.set(0);
+          y.set(0);
+        }}
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+          perspective: 1200,
+        }}
+        className={className}
+      >
+        {children}
+      </motion.div>
+    );
+  };
+  /* ---------------- MAIN COMPONENT ---------------- */
+  export default function AdminDashboard() {
+    const [staff, setStaff] = useState([]);
+    const [editingStaff, setEditingStaff] = useState(null);
+    const navigate = useNavigate();
+    const [showCreate, setShowCreate] = useState(false);
+      const [tickets, setTickets] = useState([]);
+      const [llmData, setLlmData] = useState([]);
+      const [auditLogs, setAuditLogs] = useState([]);
+      const [stats, setStats] = useState(null);
+      const [deptStats, setDeptStats] = useState([]);
+  
+      const deptData = deptStats;
+      const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#8dd1e1"];
+      const [avgTime, setAvgTime] = useState(0);
+      const chartData = llmData;
+      const socketRef = useRef(null);
+
+      useEffect(() => {
+  socketRef.current = io("http://localhost:5000", {
+    transports: ["websocket"],
+    auth: {
+      token: localStorage.getItem("token"),
+    },
+  });
+
+  socketRef.current.emit("join_room", { role: "admin" });
+
+  socketRef.current.on("ticket_created", fetchTickets);
+  socketRef.current.on("ticket_department_updated", fetchTickets);
+  socketRef.current.on("stats:update", (data) => setStats(data));
+
+  return () => {
+    socketRef.current.disconnect();
+  };
+}, []);
+
+    const fetchStaff = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        const res = await api.get("/admin/staff", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setStaff(res.data || []);
+      } catch (error) {
+        console.error(
+          "Failed to fetch staff:",
+          error.response?.data || error.message
+        );
+      }
+    };
+
+    useEffect(() => {
+      fetchStaff();
+    }, []);
+
+  const fetchTickets = async () => {
+    const token = localStorage.getItem("token");
+    const res = await api.get("/admin/incidents", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setTickets(res.data);
+  };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+    const fetchAuditLogs = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await api.get("/admin/audit-logs", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAuditLogs(res.data);
+    } catch (err) {
+      console.error("Failed to fetch audit logs", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAuditLogs();
+  }, []);
+
+    const fetchLlmAccuracy = async () => {
+    const token = localStorage.getItem("token");
+    const res = await api.get("/admin/llm-accuracy", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setLlmData(res.data);
+  };
+
+  const authHeader = () => ({
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+  useEffect(() => {
+    api.get("/admin/stats/incidents-by-dept", authHeader())
+      .then(res => setDeptStats(res.data));
+  }, []);
+
+  useEffect(() => {
+    fetchLlmAccuracy();
+  }, []);
+
+const handleLogout = () => {
+  if (socketRef.current) {
+    socketRef.current.disconnect();
+  }
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  navigate("/login");
+};
+
+    const handleEdit = (staff) => {
+      setEditingStaff(staff);
+    };
+
+    const handleDelete = async (id) => {
+      if (!window.confirm("Delete this staff member?")) return;
+
+      try {
+        await deleteStaff(id);
+        fetchStaff();
+      } catch (err) {
+        alert("Delete failed");
+        console.error(err);
+      }
+    };
+      const socket = io("http://localhost:5000", {
+      transports: ["websocket"],
+      auth: {
+        token: localStorage.getItem("token"),
+      },
+    });     
+  // useEffect(() => {
+
+  //   socket.emit("join_room", { role: "admin" });
+
+  //   socket.on("ticket_created", fetchTickets);
+  //   socket.on("ticket_department_updated", fetchTickets);
+
+  //   return () => {
+  //     socket.disconnect();
+  //   };
+  // }, []);
+
+  // useEffect(() => {
+  //   api.get("/admin/stats/avg-resolution", authHeader())
+  //     .then(res => setAvgTime(res.data.avgMinutes));
+  // }, []);
+
+    const overrideDepartment = async (id, department) => {
+    const token = localStorage.getItem("token");
+
+  await api.post(
+    `/admin/reassign-department/${id}`,
+    { department },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+    toast.success("Department overridden");
+    fetchTickets();
+  };
+
+  const fetchStats = async () => {
+    const token = localStorage.getItem("token");
+
+    const res = await api.get("/admin/stats", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    setStats(res.data);
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+    const StatCard = ({ title, value, icon: Icon, color }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.05 }}
+      className="bg-blue-500 rounded-2xl p-6 shadow-lg flex items-center gap-4"
+    >
+      <div className={`p-3 rounded-xl ${color}`}>
+        <Icon className="text-white" />
+      </div>
+      <div>
+        <p className="text-sm text-gray-500">{title}</p>
+        <motion.h3
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          className="text-2xl font-bold"
+        >
+          {value}
+        </motion.h3>
+      </div>
+    </motion.div>
+  );
+
+  useEffect(() => {
+    socket.on("stats:update", (data) => {
+      setStats(data);
+    });
+
+    return () => socket.off("stats:update");
+  }, []); 
+
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-200">
+        <div className="max-w-7xl mx-auto p-6">
+
+          {/* HEADER */}
+  <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+
+    {/* LEFT SIDE */}
+    <div className="flex items-center gap-4">
+      <LayoutDashboard className="w-8 h-8 text-indigo-400" />
+      <div>
+        <h2 className="text-3xl font-bold text-white">Admin Portal</h2>
+        <p className="text-slate-400 flex items-center gap-1">
+          <Activity className="w-4 h-4" /> System Operational
+        </p>
+      </div>
+    </div>
+
+    {/* RIGHT SIDE BUTTONS */}
+    <div className="flex items-center gap-3 justify-end">
+
+      {/* CREATE STAFF */}
+      <button
+        onClick={() => setShowCreate(true)}
+        className="
+          flex items-center gap-2
+          px-4 py-2
+          rounded-lg
+          bg-indigo-600 hover:bg-indigo-500
+          text-white
+          transition
+          shadow-md
+        "
+      >
+        <Sparkles className="w-4 h-4" />
+        Create Staff
+      </button>
+
+      {/* LOGOUT */}
+      <button
+        onClick={handleLogout}
+        className="
+          flex items-center gap-2
+          px-4 py-2
+          rounded-lg
+          bg-red-500/10 hover:bg-red-500/20
+          text-red-400
+          transition
+        "
+      >
+        <LogOut className="w-4 h-4" />
+        Logout
+      </button>
+
+    </div>
+  </header>
+  {/* <div className="bg-slate-900 p-5 rounded-xl">
+    <p className="text-slate-400 text-sm">Avg Resolution Time</p>
+    <h2 className="text-3xl font-bold text-cyan-400">
+      {avgTime} min
+    </h2>
+  </div> */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+  {showCreate && (
+    <motion.div
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xl flex items-start md:items-center justify-center px-2"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={() => setShowCreate(false)}
+    >
+      {/* MODAL */}
+      <motion.div
+        onClick={(e) => e.stopPropagation()}
+        initial={{ y: "-100%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "-100%", opacity: 0 }}
+        transition={{ type: "spring", stiffness: 120, damping: 18 }}
+        className="
+          w-full max-w-lg
+          mt-6 md:mt-0
+          bg-slate-900
+          border border-slate-800
+          rounded-2xl
+          p-6
+          shadow-2xl
+        "
+      >
+        <TiltCard>
+          <div>
+            {/* HEADER */}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <Sparkles className="text-indigo-400" />
+                Create Staff
+              </h3>
+
+              <button
+                onClick={() => setShowCreate(false)}
+                className="text-slate-400 hover:text-white text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* FORM */}
+            <CreateStaff
+              onSuccess={() => {
+                fetchStaff();
+                setShowCreate(false);
+              }}
+            />
+          </div>
+        </TiltCard>
+      </motion.div>
+    </motion.div>
+  )}
+            {/* STAFF LIST */}
+            
+            <div className="lg:col-span-8">
+              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <Users className="text-indigo-400" />
+                Staff Directory
+                <span className="text-xs bg-indigo-500 px-2 py-1 rounded-full">
+                  {staff.length}
+                </span>
+              </h3>
+              <div className="mt-12 bg-slate-900 p-6 rounded-xl">
+    <h3 className="text-xl font-bold mb-4">LLM Classification Accuracy</h3>
+
+    <BarChart width={400} height={250} data={chartData}>
+      <Bar dataKey="count" fill="#6366f1" />
+    </BarChart>
+  </div>        
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {staff.map((s) => (
+                  <TiltCard key={s._id}>
+                    <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
+                      <h4 className="font-bold text-white">{s.full_name}</h4>
+
+                      <p className="text-slate-400 text-sm flex items-center gap-2">
+                        <Mail className="w-3 h-3" />
+                        {s.email}
+                      </p>
+
+                      <div className="mt-4 flex justify-between items-center">
+                        <span className="text-xs flex items-center gap-2">
+                          <Briefcase className="w-3 h-3" />
+                          {s.department}
+                        </span>
+
+                        {s.isVerified ? (
+                          <span className="text-emerald-400 text-xs flex items-center gap-1">
+                            <ShieldCheck className="w-3 h-3" /> Verified
+                          </span>
+                        ) : (
+                          <span className="text-amber-400 text-xs flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> Pending
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-4 flex justify-end gap-4">
+                        <button
+                          onClick={() => handleEdit(s)}
+                          className="text-indigo-400 hover:text-indigo-300"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(s._id)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </TiltCard>
+                ))}
+                
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* EDIT MODAL */}
+        {editingStaff && (
+          <EditStaff
+            staff={editingStaff}
+            onClose={() => setEditingStaff(null)}
+            onSuccess={fetchStaff}
+          />
+        )}
+        <div className="mt-12">
+    {/* {stats && (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
+    <StatCard title="Users" value={stats.totalUsers} icon={Users} color="bg-blue-500"/>
+    <StatCard title="Staff" value={stats.totalStaff} icon={Briefcase} color="bg-purple-500" />
+    <StatCard title="Tickets" value={stats.totalIncidents} icon={Activity} color="bg-red-500" />
+    <StatCard title="Open" value={stats.openIncidents} icon={Clock} color="bg-amber-500" />
+    <StatCard title="Resolved" value={stats.resolvedIncidents} icon={ShieldCheck} color="bg-green-500" />
+    <StatCard title="Closed" value={stats.closeIncidents} icon={XCircle} color="text-purplr-400"/>
+    <StatCard title="In Progress" value={stats.inProgressIncidents} icon={Clock} color="text-blue-400"/>
+  </div>
+)} */}
+{stats && (
+<motion.div
+  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10"
+  initial="hidden"
+  animate="visible"
+  variants={{
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08
+      }
+    }
+  }}
+>
+    {[
+      { label: "Users", value: stats.totalUsers, icon: Layers, color: "text-indigo-400" },
+      { label: "Open", value: stats.openIncidents, icon: AlertCircle, color: "text-gray-400" },
+      { label: "In Progress", value: stats.inProgressIncidents, icon: Clock, color: "text-blue-400" },
+      { label: "Resolved", value: stats.resolvedIncidents, icon: CheckCircle, color: "text-green-400" },
+      { label: "Closed", value: stats.closedIncidents, icon: XCircle, color: "text-purple-400" },
+      { label: "Staff", value: stats.totalStaff, icon: Briefcase, color: "bg-purple-500"},
+      { label: "Total Incident", value: stats.totalIncidents, icon: Activity, color: "bg-red-500"},
+    ].map((item, i) => {
+      const Icon = item.icon;
+      return (
+        <div
+          key={i}
+          className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-between hover:shadow-lg hover:shadow-indigo-500/10 transition"
+        >
+          <div>
+            <p className="text-slate-400 text-sm">{item.label}</p>
+            <h3 className="text-3xl font-bold text-white mt-1">{item.value}</h3>
+          </div>
+          <Icon className={`w-8 h-8 ${item.color}`} />
+        </div>
+      );
+    })}
+    </motion.div>
+)}
+
+<h3 className="text-2xl font-bold mb-4">All Incidents</h3>
+
+<div className="overflow-x-auto bg-slate-900 border border-slate-800 rounded-xl">
+  <table className="w-full text-sm text-left">
+    <thead className="bg-slate-800 text-slate-400 uppercase text-xs">
+      <tr>
+        <th className="px-6 py-4">ID</th>
+        <th className="px-6 py-4">Title</th>
+        <th className="px-6 py-4">User</th>
+        <th className="px-6 py-4">Department</th>
+        <th className="px-6 py-4">Assigned</th>
+        <th className="px-6 py-4">Status</th>
+        <th className="px-6 py-4">Action</th>
+      </tr>
+    </thead>
+
+    <tbody className="divide-y divide-slate-800">
+      {tickets.map((t) => (
+        <tr key={t._id} className="hover:bg-slate-800 transition">
+          <td className="px-6 py-4 text-indigo-400">
+            {t._id.slice(-6).toUpperCase()}
+          </td>
+
+          <td className="px-6 py-4 font-semibold text-white">
+            {t.title}
+          </td>
+
+          <td className="px-6 py-4 text-slate-400">
+            {t.createdBy?.username}
+          </td>
+
+          <td className="px-6 py-4">
+            <span className="bg-purple-500/20 text-purple-400 px-3 py-1 rounded-full text-xs">
+              {t.department}
+            </span>
+          </td>
+
+          <td className="px-6 py-4 text-slate-300">
+            {t.assignedTo?.full_name || "Unassigned"}
+          </td>
+
+          <td className="px-6 py-4">
+            <span
+              className={`px-3 py-1 text-xs rounded-full font-semibold
+                ${
+                  t.status === "OPEN"
+                    ? "bg-gray-600"
+                    : t.status === "IN_PROGRESS"
+                    ? "bg-blue-500"
+                    : t.status === "RESOLVED"
+                    ? "bg-green-600"
+                    : "bg-slate-600"
+                }`}
+            >
+              {t.status}
+            </span>
+          </td>
+
+          <td className="px-6 py-4 flex gap-2">
+            <select
+              className="bg-slate-800 text-xs p-2 rounded"
+              value={t.department}
+              onChange={(e) =>
+                overrideDepartment(t._id, e.target.value)
+              }
+            >
+              <option>IT</option>
+              <option>Network</option>
+              <option>Hardware</option>
+              <option>Security</option>
+              <option>General</option>
+            </select>
+
+            <button
+              className="bg-indigo-600 hover:bg-indigo-500 text-xs px-3 py-2 rounded"
+              onClick={() =>
+                overrideDepartment(t._id, t.department)
+              }
+            >
+              Update
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+  </div>
+  <h3 className="text-xl font-bold mt-10">Admin Audit Logs</h3>
+  {/* {auditLogs.map(log => (
+    <div key={log._id} className="text-sm text-slate-400">
+      Ticket {log.incidentId} :
+      {log.originalDepartment} → {log.updatedDepartment}
+      (by {log.updatedBy.username})
+    </div>
+  ))} */}
+
+{deptStats.length > 0 && (
+  <BarChart width={450} height={260} data={deptStats}>
+    <Bar dataKey="count" />
+  </BarChart>
+)}
+    <PieChart width={300} height={300}>
+    <Pie
+      data={deptData}
+      dataKey="count"
+      nameKey="department"
+      outerRadius={100}
+      label
+    >
+      {deptData.map((_, i) => (
+        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+      ))}
+    </Pie>
+    <Tooltip />
+    <Legend />
+  </PieChart>
+
+      </div>
+    );
+  }
