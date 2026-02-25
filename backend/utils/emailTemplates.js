@@ -20,7 +20,7 @@ export const otpEmailTemplate = (otp, email) => `
   <p>
     Or click here to verify:
     <br />
-    <a href="http://localhost:5173/verify-otp?email=${email}"
+    <a href="http://10.40.251.45:5173/verify-otp?email=${email}"
        style="color:#2563eb;font-weight:bold;">
        Verify Account
     </a>
