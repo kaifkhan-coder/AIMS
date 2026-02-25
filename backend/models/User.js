@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["admin", "staff", "user"],
+    enum: ["admin", "staff", "user", "super_admin"],
     default: "user",
   },
 
@@ -75,6 +75,7 @@ profilePhoto: {
   lastLogin: {
     type: Date
   },
+  isActive: {type: Boolean, default: true},
   twoFactorEnabled: { type: Boolean, default: false },
 twoFactorCode: String,
 twoFactorExpiry: Date,

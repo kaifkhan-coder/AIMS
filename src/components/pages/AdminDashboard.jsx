@@ -82,7 +82,11 @@
       const [auditLogs, setAuditLogs] = useState([]);
       const [stats, setStats] = useState(null);
       const [deptStats, setDeptStats] = useState([]);
-  
+      const [notifications, setNotifications] = useState([]);
+      const [showNotifications, setShowNotifications] = useState(false);
+      const [workload, setWorkload] = useState([]);
+      const [topStaff, setTopStaff] = useState([]);
+
       const deptData = deptStats;
       const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#8dd1e1"];
       const [avgTime, setAvgTime] = useState(0);
@@ -192,6 +196,16 @@ const handleLogout = () => {
   navigate("/login");
 };
 
+  const SLA_MINUTES = { High: 120, Medium: 360, Low: 1440 };
+
+const isSlaBreached = (t) => {
+  if (!t?.createdAt) return false;
+  if (t.status === "Resolved" || t.status === "Closed") return false;
+  const mins = SLA_MINUTES[t.priority] ?? 1440;
+  const ageMin = (Date.now() - new Date(t.createdAt).getTime()) / 60000;
+  return ageMin > mins;
+};
+
     const handleEdit = (staff) => {
       setEditingStaff(staff);
     };
@@ -207,12 +221,12 @@ const handleLogout = () => {
         console.error(err);
       }
     };
-      const socket = io("http://localhost:5000", {
-      transports: ["websocket"],
-      auth: {
-        token: localStorage.getItem("token"),
-      },
-    });     
+    //   const socket = io("http://localhost:5000", {
+    //   transports: ["websocket"],
+    //   auth: {
+    //     token: localStorage.getItem("token"),
+    //   },
+    // });     
   // useEffect(() => {
 
   //   socket.emit("join_room", { role: "admin" });
@@ -224,11 +238,33 @@ const handleLogout = () => {
   //     socket.disconnect();
   //   };
   // }, []);
+useEffect(() => {
+  if (!socketRef.current) return;
 
-  // useEffect(() => {
-  //   api.get("/admin/stats/avg-resolution", authHeader())
-  //     .then(res => setAvgTime(res.data.avgMinutes));
-  // }, []);
+  const s = socketRef.current;
+
+  const push = (n) => {
+    setNotifications((prev) => [n, ...prev].slice(0, 20));
+    toast.success(n.message || "New notification");
+  };
+
+  s.on("notification", push);
+  s.on("ticket_created", () => push({ message: "New ticket created" }));
+  s.on("ticket_assigned", () => push({ message: "Ticket assigned" }));
+  s.on("sla_breach", (data) => push({ message: `SLA breached: ${data.title}` }));
+
+  return () => {
+    s.off("notification", push);
+    s.off("ticket_created");
+    s.off("ticket_assigned");
+    s.off("sla_breach");
+  };
+}, []);
+
+  useEffect(() => {
+    api.get("/admin/stats/avg-resolution", authHeader())
+      .then(res => setAvgTime(res.data.avgMinutes));
+  }, []);
 
     const overrideDepartment = async (id, department) => {
     const token = localStorage.getItem("token");
@@ -286,13 +322,58 @@ const handleLogout = () => {
     </motion.div>
   );
 
-  useEffect(() => {
-    socket.on("stats:update", (data) => {
-      setStats(data);
-    });
+useEffect(() => {
+  if (!socketRef.current) return;
 
-    return () => socket.off("stats:update");
-  }, []); 
+  const s = socketRef.current;
+  s.on("stats:update", (data) => setStats(data));
+
+  return () => s.off("stats:update");
+}, []);
+
+      const toggleActive = async (id, isActive) => {
+  const token = localStorage.getItem("token");
+  const url = isActive ? `/admin/staff/${id}/deactivate` : `/admin/staff/${id}/activate`;
+  await api.put(url, {}, { headers: { Authorization: `Bearer ${token}` }});
+  fetchStaff();
+  toast.success(isActive ? "Staff deactivated" : "Staff activated");
+};
+
+  useEffect(() => {
+  api.get("/admin/stats/staff-workload", authHeader()).then(res => setWorkload(res.data));
+}, []);
+
+    useEffect(() => {
+  api.get("/admin/stats/active-staff", authHeader()).then(res => setTopStaff(res.data));
+}, []);
+
+    const exportTicketsCsv = () => {
+  const rows = tickets.map(t => ({
+    id: t._id,
+    title: t.title,
+    department: t.department,
+    priority: t.priority,
+    status: t.status,
+    assignedTo: t.assignedTo?.full_name || "",
+    createdBy: t.createdBy?.username || "",
+    createdAt: t.createdAt,
+  }));
+
+  const headers = Object.keys(rows[0] || {});
+  const csv = [
+    headers.join(","),
+    ...rows.map(r => headers.map(h => `"${String(r[h] ?? "").replace(/"/g,'""')}"`).join(","))
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `tickets-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
 
     return (
       <div className="min-h-screen bg-slate-950 text-slate-200">
@@ -348,14 +429,40 @@ const handleLogout = () => {
         Logout
       </button>
 
+<button
+  onClick={() => setShowNotifications((v) => !v)}
+  className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-600 text-white"
+>
+  Notifications ({notifications.length})
+</button>
+
+      {showNotifications && (
+  <div className="fixed right-6 top-20 w-[360px] z-50 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4">
+    <div className="flex items-center justify-between mb-3">
+      <h4 className="font-bold">Notifications</h4>
+      <button onClick={() => setNotifications([])} className="text-xs text-slate-400 hover:text-white">
+        Clear
+      </button>
+    </div>
+    <div className="space-y-2 max-h-[420px] overflow-auto">
+      {notifications.length === 0 ? (
+        <p className="text-slate-500 text-sm">No notifications</p>
+      ) : notifications.map((n, i) => (
+        <div key={i} className="bg-slate-800/60 border border-slate-700 rounded-xl p-3 text-sm">
+          {n.message}
+        </div>
+      ))}
+    </div>
+  </div>
+)}
     </div>
   </header>
-  {/* <div className="bg-slate-900 p-5 rounded-xl">
+  <div className="bg-slate-900 p-5 rounded-xl">
     <p className="text-slate-400 text-sm">Avg Resolution Time</p>
     <h2 className="text-3xl font-bold text-cyan-400">
       {avgTime} min
     </h2>
-  </div> */}
+  </div>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
   {showCreate && (
     <motion.div
@@ -412,8 +519,7 @@ const handleLogout = () => {
     </motion.div>
   )}
             {/* STAFF LIST */}
-            
-            <div className="lg:col-span-8">
+            <motion.div className="lg:col-span-8">
               <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <Users className="text-indigo-400" />
                 Staff Directory
@@ -421,14 +527,15 @@ const handleLogout = () => {
                   {staff.length}
                 </span>
               </h3>
-              <div className="mt-12 bg-slate-900 p-6 rounded-xl">
+              <motion.div className="mt-12 bg-slate-900 p-6 rounded-xl">
     <h3 className="text-xl font-bold mb-4">LLM Classification Accuracy</h3>
 
     <BarChart width={400} height={250} data={chartData}>
       <Bar dataKey="count" fill="#6366f1" />
     </BarChart>
-  </div>        
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  </motion.div>        
+  <h1 className="font-bold">Staffs</h1>
+              <motion.div className="py-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 {staff.map((s) => (
                   <TiltCard key={s._id}>
                     <div className="bg-slate-900/40 border border-slate-800 rounded-2xl p-5">
@@ -470,15 +577,47 @@ const handleLogout = () => {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
+                            <button
+  onClick={() => toggleActive(s._id, s.isActive)}
+  className={`text-xs px-3 py-1 rounded ${
+    s.isActive ? "bg-red-500/20 text-red-300" : "bg-emerald-500/20 text-emerald-300"
+  }`}
+>
+  {s.isActive ? "Deactivate" : "Activate"}
+</button>
                       </div>
                     </div>
                   </TiltCard>
                 ))}
                 
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
+            
           </div>
         </div>
+                    <motion.div className="mt-10 bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h3 className="text-xl font-bold mb-4">Staff Workload (Open)</h3>
+  <motion.div className="space-y-2">
+    {workload.map((w, i) => (
+      <div key={i} className="flex items-center justify-between bg-slate-800/60 p-3 rounded-lg">
+        <span className="text-slate-300">StaffId: {String(w._id).slice(-6)}</span>
+        <span className="font-bold text-indigo-300">{w.openCount}</span>
+      </div>
+    ))}
+  </motion.div>
+</motion.div>
+        <motion.div className="mt-10 bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h3 className="text-xl font-bold mb-4">Top 5 Active Staff</h3>
+  <motion.div className="space-y-2">
+    {topStaff.map((s, i) => (
+      <motion.div key={i} className="flex items-center justify-between bg-slate-800/60 p-3 rounded-lg">
+        <span className="text-white">{s.full_name || s.name || "Staff"}</span>
+        <span className="text-slate-300">Resolved: {s.count}</span>
+      </motion.div>
+    ))}
+  </motion.div>
+</motion.div>
+
 
         {/* EDIT MODAL */}
         {editingStaff && (
@@ -489,17 +628,6 @@ const handleLogout = () => {
           />
         )}
         <div className="mt-12">
-    {/* {stats && (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
-    <StatCard title="Users" value={stats.totalUsers} icon={Users} color="bg-blue-500"/>
-    <StatCard title="Staff" value={stats.totalStaff} icon={Briefcase} color="bg-purple-500" />
-    <StatCard title="Tickets" value={stats.totalIncidents} icon={Activity} color="bg-red-500" />
-    <StatCard title="Open" value={stats.openIncidents} icon={Clock} color="bg-amber-500" />
-    <StatCard title="Resolved" value={stats.resolvedIncidents} icon={ShieldCheck} color="bg-green-500" />
-    <StatCard title="Closed" value={stats.closeIncidents} icon={XCircle} color="text-purplr-400"/>
-    <StatCard title="In Progress" value={stats.inProgressIncidents} icon={Clock} color="text-blue-400"/>
-  </div>
-)} */}
 {stats && (
 <motion.div
   className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10"
@@ -519,7 +647,7 @@ const handleLogout = () => {
       { label: "Open", value: stats.openIncidents, icon: AlertCircle, color: "text-gray-400" },
       { label: "In Progress", value: stats.inProgressIncidents, icon: Clock, color: "text-blue-400" },
       { label: "Resolved", value: stats.resolvedIncidents, icon: CheckCircle, color: "text-green-400" },
-      { label: "Closed", value: stats.closedIncidents, icon: XCircle, color: "text-purple-400" },
+      { label: "Closed", value: stats.closeIncidents, icon: XCircle, color: "text-purple-400" },
       { label: "Staff", value: stats.totalStaff, icon: Briefcase, color: "bg-purple-500"},
       { label: "Total Incident", value: stats.totalIncidents, icon: Activity, color: "bg-red-500"},
     ].map((item, i) => {
@@ -540,6 +668,13 @@ const handleLogout = () => {
     </motion.div>
 )}
 
+<button
+  onClick={exportTicketsCsv}
+  className="mb-3 bg-emerald-600 hover:bg-emerald-500 text-sm px-4 py-2 rounded-lg"
+>
+  Export CSV
+</button>
+
 <h3 className="text-2xl font-bold mb-4">All Incidents</h3>
 
 <div className="overflow-x-auto bg-slate-900 border border-slate-800 rounded-xl">
@@ -553,6 +688,7 @@ const handleLogout = () => {
         <th className="px-6 py-4">Assigned</th>
         <th className="px-6 py-4">Status</th>
         <th className="px-6 py-4">Action</th>
+        <th className="px-6 py-4">SLA</th>
       </tr>
     </thead>
 
@@ -576,7 +712,6 @@ const handleLogout = () => {
               {t.department}
             </span>
           </td>
-
           <td className="px-6 py-4 text-slate-300">
             {t.assignedTo?.full_name || "Unassigned"}
           </td>
@@ -622,22 +757,44 @@ const handleLogout = () => {
               Update
             </button>
           </td>
+          {/* <th className="px-6 py-4">SLA</th> */}
+<td className="px-6 py-4">
+  {isSlaBreached(t) ? (
+    <span className="px-3 py-1 text-xs rounded-full bg-red-500/20 text-red-300 font-semibold">
+      Breached
+    </span>
+  ) : (
+    <span className="px-3 py-1 text-xs rounded-full bg-emerald-500/20 text-emerald-300 font-semibold">
+      On Track
+    </span>
+  )}
+</td>
         </tr>
       ))}
     </tbody>
   </table>
 </div>
-
   </div>
-  <h3 className="text-xl font-bold mt-10">Admin Audit Logs</h3>
-  {/* {auditLogs.map(log => (
-    <div key={log._id} className="text-sm text-slate-400">
-      Ticket {log.incidentId} :
-      {log.originalDepartment} → {log.updatedDepartment}
-      (by {log.updatedBy.username})
-    </div>
-  ))} */}
-
+<div className="mt-10 bg-slate-900 border border-slate-800 rounded-xl p-6">
+  <h3 className="text-xl font-bold mb-4">Audit Logs</h3>
+  <div className="space-y-2 max-h-[350px] overflow-auto">
+    {auditLogs.length === 0 ? (
+      <p className="text-slate-500 text-sm">No logs</p>
+    ) : auditLogs.map((log) => (
+      <div key={log._id} className="bg-slate-800/60 p-3 rounded-lg text-sm">
+        <div className="text-slate-300">
+          Ticket: <span className="text-white">{String(log.incidentId).slice(-6)}</span>
+        </div>
+        <div className="text-slate-400">
+          {log.originalDepartment} → {log.updatedDepartment} • by {log.updatedBy?.username || "admin"}
+        </div>
+        <div className="text-slate-500 text-xs">
+          {new Date(log.createdAt).toLocaleString()}
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
 {deptStats.length > 0 && (
   <BarChart width={450} height={260} data={deptStats}>
     <Bar dataKey="count" />

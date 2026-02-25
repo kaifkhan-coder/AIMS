@@ -17,6 +17,7 @@ import AdminRoute from "./components/pages/AdminRoutes.jsx";
 import VerifyOTPAdmin from "./components/pages/VerifyOTPAdmin.jsx";
 import UserProfileSection from "./components/pages/UserProfileSection.jsx"
 import AdminFaceVerify from "./components/pages/AdminFaceVerify.jsx";
+import SuperAdminDashboard from "./components/pages/SuperAdminDashboard.jsx";
 function App() {
   const {loading} = useAuth();
   if(loading){
@@ -32,6 +33,11 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-otp" element={<VerifyOTPAdmin />} />
+      <Route path="/super-dashboard" element={
+        <ProtectedRoute allowedRoles="super_admin">
+          <SuperAdminDashboard />
+        </ProtectedRoute>
+      } />
       <Route path="/admin" element={
         <ProtectedRoute allowedRoles="admin">
           <AdminRoute>

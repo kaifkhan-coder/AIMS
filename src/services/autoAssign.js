@@ -1,3 +1,4 @@
+import { getAssignedIncidents } from "../../backend/llmService.js";
 import User from "../models/User.js";
 
 export const autoAssignStaff = async (department) => {
@@ -12,7 +13,7 @@ const staff = {
   Admin: "Office Admin"
 };
 
-const result = await classifyIncident(ticket.description);
+const result = await getAssignedIncidents(ticket.description);
 
 ticket.department = result.department;
 ticket.assignedTo = staff[result.department];

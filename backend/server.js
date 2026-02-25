@@ -25,6 +25,8 @@ import notificationRoutes from "./routes/notification.js";
 import aiRoutes from "./routes/ai.js";
 import userRoutes from "./routes/UserRoutes.js";
 import llmRoutes from "./routes/llm.js";
+import bootstrapRoutes from "./routes/bootstrap.js";
+import superadminRoutes from "./routes/superadminRoutes.js";
 
 import User from "./models/User.js";
 import { checkSlaBreach } from "./services/slaWatcher.js";
@@ -62,6 +64,7 @@ app.use(passport.session());
 
 startAutoCloseJob();
 /* ---------------- MONGODB CONNECT ---------------- */
+
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -72,9 +75,7 @@ const connectDB = async () => {
 
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash("admin123", 10);
-
-            User.twoFactorEnabled = true;
-await User.save();
+      
       await User.create({
         full_name: "Admin One",
         email: "khan.kaif.new@gmail.com",
@@ -83,8 +84,6 @@ await User.save();
         role: "admin",
         isVerified: true,
       });
-
-
       console.log("✅ Admin created: admin1 / admin123");
     }
 
@@ -245,6 +244,8 @@ app.use("/api/ai", aiRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/users", userRoutes);
 app.use("/api/llm", llmRoutes);
+app.use("/api/bootstrap", bootstrapRoutes);
+app.use("/api/superadmin", superadminRoutes);
 /* ---------------- SLA WATCHER ---------------- */
 setInterval(() => {
   checkSlaBreach(io);

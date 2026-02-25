@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 
 export const protect = async (req, res, next) => {
   try {
@@ -82,4 +83,18 @@ export const allowRoles = (...roles) => {
 
     next();
   };
+
+};
+
+// export const superAdminOnly = (req, res, next) => {
+//   if (req.user.role !== "super_admin") {
+//     return res.status(403).json({ message: "Super Admin only access" });
+//   }
+//   next();
+// };
+export const requireSuperAdmin = (req, res, next) => {
+  if (req.user?.role !== "super_admin") {
+    return res.status(403).json({ message: "Super Admin only" });
+  }
+  next();
 };

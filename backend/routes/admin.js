@@ -8,6 +8,7 @@ import { otpEmailTemplate } from "../utils/emailTemplates.js";
 import { classifyIncident } from "../llmService.js";
 import { getAssignedTickets } from "../controllers/ticketController.js";
 import Ticket from "../models/Ticket.js";
+import Incident from "../models/incident.js";
 import AuditLog from "../models/AuditLog.js";
 const router = express.Router();
 
@@ -25,6 +26,26 @@ router.get("/staff", protect, adminOnly, async (req, res) => {
     console.error("FETCH STAFF ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
+});
+
+router.put("/staff/:id/deactivate", protect, adminOnly, async (req,res)=>{
+  const u = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+  res.json(u);
+});
+router.put("/staff/:id/activate", protect, adminOnly, async (req,res)=>{
+  const u = await User.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
+  res.json(u);
+});
+
+router.get("/stats/staff-workload", protect, adminOnly, async (req, res) => {
+  const data = await Incident.aggregate([
+    { $match: { assignedTo: { $ne: null }, status: { $in: ["Open", "In Progress", "Pending"] } } },
+    { $group: { _id: "$assignedTo", openCount: { $sum: 1 } } },
+    { $sort: { openCount: -1 } },
+    { $limit: 50 }
+  ]);
+
+  res.json(data);
 });
 
 router.get("/audit-logs", protect, adminOnly, async (req, res) => {
@@ -57,11 +78,37 @@ router.get("/llm-accuracy", protect, adminOnly, getLlmAccuracy);
 
 router.post("/reassign-department/:id", protect, adminOnly, reassignDepartment)
 
-router.get(
-  "/assigned",
-  protect,        // JWT middleware
-  getAssignedTickets
-);
+// router.get(
+//   "/assigned",
+//   protect,        // JWT middleware
+//   getAssignedTickets
+// );
+import mongoose from "mongoose";
+
+router.get("/assigned", protect, async (req, res) => {
+  try {
+    console.log("REQ.USER:", req.user);
+
+    const staffId = req.user?.id || req.user?._id;
+    if (!staffId) {
+      return res.status(401).json({ message: "User id missing in token" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(staffId)) {
+      return res.status(400).json({ message: "Invalid user id" });
+    }
+
+    const incidents = await Incident.find({
+      assignedTo: new mongoose.Types.ObjectId(staffId),
+    }).sort({ createdAt: -1 });
+
+    return res.json({ tickets: incidents });
+  } catch (err) {
+    console.error("ASSIGNED ROUTE ERROR:", err);
+    return res.status(500).json({ message: "Failed to load assigned tickets" });
+  }
+});
+
 
 router.put(
   "/tickets/:id/department",

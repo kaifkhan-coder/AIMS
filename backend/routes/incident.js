@@ -1,5 +1,7 @@
   import express from "express";
   import multer from "multer";
+  import mongoose from "mongoose";
+  import User from "../models/User.js";
   import {
     createIncident,
     getIncidentById,
@@ -28,78 +30,43 @@
   const upload = multer({ storage });
 
   // CREATE INCIDENT
+    
+router.get("/assigned", protect, async (req, res) => {
+  try {
+    const staffId = req.user?.id || req.user?._id;
 
-  // router.post("/", protect, async (req, res) => {
+    if (!staffId) return res.status(401).json({ message: "No user id in token" });
+    if (!mongoose.Types.ObjectId.isValid(staffId))
+      return res.status(400).json({ message: "Invalid user id" });
+
+    console.log("STAFF (token) id:", staffId);
+
+    const incidents = await Incident.find({
+      assignedTo: new mongoose.Types.ObjectId(staffId),
+    }).sort({ createdAt: -1 });
+
+    console.log("MATCH COUNT:", incidents.length);
+
+    return res.json({ tickets: incidents });
+  } catch (err) {
+    console.error("ASSIGNED ERROR:", err);
+    return res.status(500).json({ message: "Failed to load assigned tickets" });
+  }
+});
+  // router.get("/assigned", protect, async (req, res) => {
   //   try {
-  //     const { title, description, category, priority } = req.body;
-
-  //     // 🔥 auto-detect department
-  //     const department = getDepartmentByCategory(category);
-
-  //     const ticket = await Incident.create({
-  //       title,
-  //       description,
-  //       category,
-  //       priority,
-  //       createdBy: req.user.id,
-  //       assignedDepartment: department
-  //     });
-
-  //     const io = req.app.get("io");
-
-  //     /* 🔔 NOTIFICATIONS */
-
-  //     // User
-  //     await Notification.create({
-  //       user: req.user.id,
-  //       role: "user",
-  //       message: `Ticket created and assigned to ${department} department`
-  //     });
-
-  //     // Admin
-  //     await Notification.create({
-  //       role: "admin",
-  //       message: `New ticket assigned to ${department} department`
-  //     });
-
-  //     // Staff (department-based)
-  //     await Notification.create({
-  //       role: department.toLowerCase(),
-  //       message: `New ticket received for ${department} department`
-  //     });
-
-  //     // 🔴 SOCKET EVENTS
-  //     io.to(req.user.id).emit("ticket_created", {
-  //       message: "Your ticket has been created successfully"
-  //     });
-
-  //     io.to("admin").emit("ticket_created", {
-  //       message: `New ${department} ticket created`
-  //     });
-
-  //     io.to(department.toLowerCase()).emit("ticket_assigned", {
-  //       message: `New ticket assigned to your department`
-  //     });
-
-  //     res.status(201).json(ticket);
-
+  //     const incidents = await Incident.find({
+  //       assignedTo: req.user.id,
+  //     }).sort({ createdAt: -1 });
+  
+  //     res.json({ tickets: incidents });
   //   } catch (err) {
-  //     console.error(err);
-  //     res.status(500).json({ message: "Ticket creation failed" });
-  //   }
-  // });
-  router.get("/assigned", protect, async (req, res) => {
-    try {
-      const incidents = await Incident.find({
-        assignedTo: req.user.id,
-      }).sort({ createdAt: -1 });
-
-      res.json({ tickets: incidents });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: "Failed to load assigned tickets" });
-    }
-  });
+    //     console.error(err);
+    //     res.status(500).json({ message: "Failed to load assigned tickets" });
+    //   }
+    // });
+    
+    router.get("/my", protect, getMyIncidents);
 
   router.post("/auto", async (req, res) => {
   try {
@@ -179,11 +146,9 @@ router.put("/auto/resolved", async (req, res) => {
   
   router.get("/:id/report", protect, downloadIncidentReport);
 
+        router.get("/:id", protect, getIncidentById);
+        
   router.post("/", protect, upload.single("attachment"), protect, createIncident);
-
-  router.get("/my", protect, getMyIncidents);
-
-  router.get("/:id", protect, getIncidentById);
 
   router.post("/:id/comment", protect, addComment);
 

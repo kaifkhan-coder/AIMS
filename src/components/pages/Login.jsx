@@ -121,6 +121,9 @@ const usernameSchema = z
 const role = res.data.user.role;
       if (role === "admin") navigate("/admin");
       else if (role === "staff") navigate("/staff");
+      else if (role === "super_admin") {
+  navigate("/super-dashboard");
+}
       else navigate("/user");
 
     } catch (err) {

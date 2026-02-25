@@ -72,6 +72,8 @@ if (user.role === "staff" && !user.isVerified) {
     message: "Account not verified. Please verify OTP."
   });
 }
+if (!user.isActive) return res.status(403).json({ message: "Account deactivated" });
+
 if (user.role === "admin" && user.twoFactorEnabled) {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
