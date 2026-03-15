@@ -580,6 +580,27 @@ const renderAuditMessage = (log) => {
       return <>performed action: {log.action}</>;
   }
 };
+const approveClose = async (id) => {
+  try {
+    await api.patch(`/incidents/${id}/approve-close`, {}, authHeader());  
+    toast.success("Incident close approved");
+    fetchTickets();
+  } catch (err) {
+    toast.error("Failed to approve close");
+    console.error(err);
+  }
+};
+
+const rejectClose = async (id) => {
+  try {
+    await api.patch(`/incidents/${id}/reject-close`, {}, authHeader());  
+    toast.success("Incident close rejected");
+    fetchTickets();
+  } catch (err) {
+    toast.error("Failed to reject close");
+    console.error(err);
+  }
+};
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-indigo-500/30">
       <div className="max-w-[1600px] mx-auto p-4 lg:p-8 space-y-8">
@@ -800,7 +821,6 @@ const renderAuditMessage = (log) => {
     <AlertCircle className="w-4 h-4 text-rose-400" />
     Suggested Admin Action
   </h3>
-
   <div className="space-y-3">
     {excellentStaff.slice(0, 3).map((s) => (
       <div
@@ -815,7 +835,6 @@ const renderAuditMessage = (log) => {
         </p>
       </div>
     ))}
-
     {weakStaff.slice(0, 3).map((s) => (
       <div
         key={`weak-${s._id}`}
@@ -1119,19 +1138,39 @@ const renderAuditMessage = (log) => {
                             </span>
                           )}
                         </td>
-                        <td className="px-6 py-4">
-                          <select
-                            className="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-indigo-500 outline-none"
-                            value={t.department}
-                            onChange={(e) => overrideDepartment(t._id, e.target.value)}
-                          >
-                            <option value="IT">IT</option>
-                            <option value="Network">Network</option>
-                            <option value="Hardware">Hardware</option>
-                            <option value="Accounts">Accounts</option>
-                            <option value="General">General</option>
-                          </select>
-                        </td>
+<td className="px-6 py-4">
+  <div className="flex flex-col gap-2">
+    <select
+      className="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-indigo-500 outline-none"
+      value={t.department}
+      onChange={(e) => overrideDepartment(t._id, e.target.value)}
+    >
+      <option value="IT">IT</option>
+      <option value="Network">Network</option>
+      <option value="Hardware">Hardware</option>
+      <option value="Accounts">Accounts</option>
+      <option value="General">General</option>
+    </select>
+
+    {t.status === "Resolved" && (
+      <div className="flex gap-2">
+        <button
+          onClick={() => approveClose(t._id)}
+          className="px-2 py-1 text-xs rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+        >
+          Approve Close
+        </button>
+
+        <button
+          onClick={() => rejectClose(t._id)}
+          className="px-2 py-1 text-xs rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30"
+        >
+          Reject Close
+        </button>
+      </div>
+    )}
+  </div>
+</td>
                       </motion.tr>
                     ))}
                   </tbody>

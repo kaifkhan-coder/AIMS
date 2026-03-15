@@ -20,7 +20,8 @@ import {
   getHeatmapStats,
   getSolutionSuggestions,
   getRootCause,
-  reopenTicket
+  approveCloseIncident,
+  rejectCloseIncident,
 } from "../controllers/incidentController.js";
 import { adminOnly, protect, roleCheck } from "../middleware/autMiddleware.js";
 
@@ -190,7 +191,8 @@ router.put("/auto/resolved", async (req, res) => {
    KNOWLEDGE BASE
 ================================ */
 router.post("/solution-suggestions", protect, getSolutionSuggestions);
-
+router.patch("/:id/approve-close", protect, adminOnly, approveCloseIncident);
+router.patch("/:id/reject-close", protect, adminOnly, rejectCloseIncident);
 router.post("/knowledge-base/search", protect, async (req, res) => {
   try {
     const { query, department } = req.body;
