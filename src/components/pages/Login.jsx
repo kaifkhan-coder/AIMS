@@ -76,75 +76,79 @@ export default function Login() {
 
   // localStorage.clear();
   
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setServerError("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setServerError("");
 
-    /* Client Validation */
-    const result = loginSchema.safeParse(form);
-    if (!result.success) {
-      const errors = {};
-      result.error.errors.forEach((err) => {
-        if (err.path[0]) errors[err.path[0]] = err.message;
+  const result = loginSchema.safeParse(form);
+  if (!result.success) {
+    const errors = {};
+    result.error.errors.forEach((err) => {
+      if (err.path[0]) errors[err.path[0]] = err.message;
+    });
+    setValidationErrors(errors);
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const res = await loginUser(form);
+    console.log("Login response:", res.data);
+
+    // ✅ Admin 2FA only
+    if (res.data?.twoFactorRequired) {
+      navigate("/verify-otp-admin", {
+        state: { userId: res.data.userId, email: res.data.email }
       });
-      setValidationErrors(errors);
-      setLoading(false);
       return;
     }
 
-    /* Backend Integration */
-    try {
-      const res = await loginUser(form);
-      console.log("Login response:", res.data);
-      /* Save Auth */
+    // ✅ Normal login
+    if (res.data.token && res.data.user) {
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("role", res.data.user.role);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-if (res.data.token && res.data.user) {
-  localStorage.setItem("token", res.data.token);
-  localStorage.setItem("role", res.data.user.role);
-  localStorage.setItem("user", JSON.stringify(res.data.user));
+      connectSocket(res.data.token);
 
-  connectSocket(res.data.token);
-}
-if (res.data.twoFactorRequired) {
-  navigate("/verify-otp", { state: { userId: res.data.userId } });
-  return;
-}
+      const role = res.data.user.role;
 
-const usernameSchema = z
-  .string()
-  .min(4, "Username must be at least 4 characters")
-  .max(20, "Username must be under 20 characters")
-  .regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, 
-    "Username must start with a letter and contain only letters, numbers, _");
-
-const role = res.data.user.role;
       if (role === "admin") navigate("/admin");
       else if (role === "staff") navigate("/staff");
-      else if (role === "super_admin") {
-  navigate("/super-dashboard");
-}
+      else if (role === "super_admin") navigate("/super-dashboard");
       else navigate("/user");
-
-    } catch (err) {
-      console.log(err)
-
-      if (err.response?.status === 401) {
-        setServerError("Invalid username or password");
-      } else if (err.response?.status === 403) {
-        navigate(`/verify-otp?username=${form.username}`);
-      } else {
-        setServerError("Server error. Try again later.");
-      }
-    } finally {
-      setLoading(false);
     }
-  };
-//   loginUser({
-//   username: form.username.trim().toLowerCase(),
-//   password: form.password
-// });
 
+  } catch (err) {
+    console.log("LOGIN ERROR:", err?.response?.data || err);
+
+    const data = err?.response?.data;
+    const status = err?.response?.status;
+
+    // ✅ Only go to staff OTP page when backend explicitly says so
+    if (status === 403 && data?.needsStaffOTP) {
+      navigate("/verify-otp", {
+        state: { email: data.email || form.username }
+      });
+      return;
+    }
+
+    // ✅ Blocked / deactivated user should stay on login page
+    if (status === 403 && data?.message === "Account deactivated") {
+      setServerError(`Account blocked: ${data.reason || "No reason provided"}`);
+      return;
+    }
+
+    if (status === 401) {
+      setServerError("Invalid username or password");
+    } else {
+      setServerError(data?.message || "Server error. Try again later.");
+    }
+  } finally {
+    setLoading(false);
+  }
+}; 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#0f172a] overflow-hidden relative perspective-1000">
 

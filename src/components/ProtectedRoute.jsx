@@ -9,29 +9,41 @@
 
 //   return children;
 // }
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../components/context/AuthContext";
+import api from "../services/api";
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user } = useAuth();
-  const token = localStorage.getItem("token");
-  // Not logged in
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
+export default function ProtectedRoute({ allowedRoles, children }) {
+  const [ok, setOk] = useState(null);
 
-  // Role not allowed
-  if (
-    allowedRoles &&
-    Array.isArray(allowedRoles) &&
-    !allowedRoles.includes(user.role)
-  ) {
-    return <Navigate to="/unauthorized" replace />;
-  }
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await api.get("/auth/me");  // ✅ fixed
 
+        const u = res.data?.user || res.data;
+        const role = u?.role;
+
+        if (!role) {
+          setOk(false);
+          return;
+        }
+
+        if (allowedRoles) {
+          const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
+          setOk(roles.includes(role));
+        } else {
+          setOk(true);
+        }
+      } catch (e) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setOk(false);
+      }
+    })();
+  }, [allowedRoles]);
+
+  if (ok === null) return <div className="p-6 text-center">Checking...</div>;
+  if (!ok) return <Navigate to="/login" replace />;
   return children;
-};
-
-export default ProtectedRoute;
-
-
+}

@@ -10,6 +10,8 @@ import { getAssignedTickets } from "../controllers/ticketController.js";
 import Ticket from "../models/Ticket.js";
 import Incident from "../models/incident.js";
 import AuditLog from "../models/AuditLog.js";
+// import { sendStaffOtp } from "../controllers/sendStaffOtp.js";
+// import { verifyOtpWithToken } from "../controllers/VerifyOtpWithToken.js";
 const router = express.Router();
 
 router.get("/incidents", protect, roleCheck("admin"), getAllIncidentsForAdmin);
@@ -19,7 +21,7 @@ router.post("/create-staff", protect, adminOnly, createStaff);
 router.get("/staff", protect, adminOnly, async (req, res) => {
   try {
     const staff = await User.find({ role: "staff" })
-      .select("full_name email department isVerified");
+      .select("full_name email department isVerified isActive");
 
     res.json(staff);
   } catch (err) {
@@ -28,12 +30,34 @@ router.get("/staff", protect, adminOnly, async (req, res) => {
   }
 });
 
+// router.post("/staff/send-otp", sendStaffOtp);
+// router.post("/staff/verify-otp", verifyOtpWithToken);
+
 router.put("/staff/:id/deactivate", protect, adminOnly, async (req,res)=>{
   const u = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+  await AuditLog.create({
+  action: "STAFF_DEACTIVATED",
+  updatedBy: req.user._id,
+  details: {
+    staffId: staff._id,
+    full_name: staff.full_name,
+    email: staff.email,
+  },
+});
+  
   res.json(u);
 });
 router.put("/staff/:id/activate", protect, adminOnly, async (req,res)=>{
   const u = await User.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
+  await AuditLog.create({
+  action: "STAFF_ACTIVATED",
+  updatedBy: req.user._id,
+  details: {
+    staffId: staff._id,
+    full_name: staff.full_name,
+    email: staff.email,
+  },
+});
   res.json(u);
 });
 

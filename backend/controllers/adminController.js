@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 import openai, { classifyIncident } 
 from "../llmService.js";
 import { protect, roleCheck } from "../middleware/autMiddleware.js";
-
+import AuditLog from "../models/AuditLog.js";
 export const getAllIncidentsForAdmin = [
   protect,
   roleCheck("admin"),
@@ -45,7 +45,7 @@ console.log("BODY:", req.body);
 export const reassignTicketDepartment = async (req, res) => {
   const { department } = req.body;
 
-  const ticket = await Ticket.findById(req.params.id);
+  const ticket = await Incident.findById(req.params.id);
   if (!ticket) {
     return res.status(404).json({ message: "Ticket not found" });
   }
@@ -109,7 +109,6 @@ export const getAssignedTickets = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 
 /* ===============================
    CREATE INCIDENT (WITH LLM)
@@ -207,6 +206,28 @@ export const createStaff = async (req, res) => {
       "Verify your Staff Account",
       otpEmailTemplate(otp, email)
     );
+const newStaff = await User.create({
+  full_name,
+  email,
+  username: username.toLowerCase(),
+  password: hashedPassword,
+  department,
+  role: "staff",
+  isVerified: false,
+  otp: hashedOtp,
+  otpExpires: Date.now() + 10 * 60 * 1000
+});
+
+await AuditLog.create({
+  action: "STAFF_CREATED",
+  updatedBy: req.user._id,
+  details: {
+    staffId: newStaff._id,
+    full_name: newStaff.full_name,
+    email: newStaff.email,
+    department: newStaff.department,
+  },
+});
 
     console.log(`Staff created: ${username}`);
     res.status(201).json({ message: "Staff created. OTP sent." });
@@ -229,6 +250,16 @@ export const deleteStaff = async (req, res) => {
     }
 
     await staff.deleteOne();
+    await AuditLog.create({
+  action: "STAFF_DELETED",
+  updatedBy: req.user._id,
+  details: {
+    staffId: staff._id,
+    full_name: staff.full_name,
+    email: staff.email,
+    department: staff.department,
+  },
+});
     res.json({ message: "Staff deleted successfully" });
 
   } catch (err) {
@@ -241,6 +272,29 @@ export const deleteStaff = async (req, res) => {
    MANUAL DEPT CORRECTION
 ================================ */
 
+// export const reassignDepartment = async (req, res) => {
+//   try {
+//     const { department } = req.body;
+
+//     const incident = await Incident.findById(req.params.id);
+//     if (!incident) {
+//       return res.status(404).json({ message: "Incident not found" });
+//     }
+
+//     incident.department = department;
+//     await incident.save();
+
+//     res.json({
+//       message: "Department reassigned successfully",
+//       incident,
+//     });
+//   } catch (err) {
+//     console.error("REASSIGN ERROR:", err);
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+
 export const reassignDepartment = async (req, res) => {
   try {
     const { department } = req.body;
@@ -250,12 +304,55 @@ export const reassignDepartment = async (req, res) => {
       return res.status(404).json({ message: "Incident not found" });
     }
 
-    incident.department = department;
-    await incident.save();
+    const oldDepartment = incident.department;
+
+    const newStaff = await User.findOne({
+      role: "staff",
+      department,
+      isActive: true,
+    }).select("_id full_name department");
+
+    const updatedIncident = await Incident.findByIdAndUpdate(
+      req.params.id,
+      {
+        $set: {
+          department,
+          assignedTo: newStaff ? newStaff._id : null,
+        },
+      },
+      {
+        new: true,
+        runValidators: false,
+      }
+    )
+      .populate("createdBy", "username email")
+      .populate("assignedTo", "full_name department");
+
+    const io = req.app.get("io");
+
+    io?.to("admin").emit("ticket_department_updated", {
+      ticketId: updatedIncident._id,
+      title: updatedIncident.title,
+      oldDepartment,
+      newDepartment: department,
+      assignedTo: updatedIncident.assignedTo,
+    });
+
+    await AuditLog.create({
+      action: "TICKET_DEPARTMENT_CHANGED",
+      incidentId: updatedIncident._id,
+      updatedBy: req.user._id,
+      originalDepartment: oldDepartment,
+      updatedDepartment: department,
+      details: {
+        ticketId: updatedIncident.ticketId,
+        assignedToName: newStaff?.full_name || "Unassigned",
+      },
+    });
 
     res.json({
       message: "Department reassigned successfully",
-      incident,
+      incident: updatedIncident,
     });
   } catch (err) {
     console.error("REASSIGN ERROR:", err);

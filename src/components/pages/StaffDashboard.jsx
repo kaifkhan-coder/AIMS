@@ -1,10 +1,44 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { Loader2, CheckCircle2, AlertCircle, Clock, User } from "lucide-react";
-import { getSocket } from "./Socket.js"; // single instance
+import {
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  User,
+  Bot,
+  FileText,
+  MessageSquare,
+  Send,
+  LogOut,
+  ChevronDown,
+  Bell
+} from "lucide-react";
+import { getSocket } from "./Socket.js";
 import { useAuth } from "../context/AuthContext.jsx";
+
+// Animation Variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 100, damping: 15 },
+  },
+};
 
 export default function StaffDashboard() {
   const [tickets, setTickets] = useState([]);
@@ -40,13 +74,12 @@ export default function StaffDashboard() {
     };
   }, [user]);
 
-  // Fetch tickets assigned to this staff
   const fetchTickets = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
       const res = await axios.get("http://localhost:5000/api/incidents/assigned", {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       setTickets(res.data.tickets);
     } catch (err) {
@@ -56,11 +89,9 @@ export default function StaffDashboard() {
       setLoading(false);
     }
   };
-
   const getAiSuggestion = async (ticket) => {
     try {
       const token = localStorage.getItem("token");
-
       const res = await axios.post(
         "http://localhost:5000/api/ai/suggest-resolution",
         {
@@ -78,7 +109,6 @@ export default function StaffDashboard() {
         ...prev,
         [ticket._id]: res.data.suggestion,
       }));
-
     } catch (err) {
       console.error("AI ERROR:", err);
     }
@@ -88,10 +118,8 @@ export default function StaffDashboard() {
     fetchTickets();
   }, []);
 
-  // Update ticket status
   const updateStatus = async (id, status) => {
     const token = localStorage.getItem("token");
-
     await axios.put(
       `http://localhost:5000/api/incidents/${id}/status`,
       { status },
@@ -103,16 +131,16 @@ export default function StaffDashboard() {
     );
     fetchTickets();
   };
+
   const downloadReport = async (ticketId) => {
     const token = localStorage.getItem("token");
-
     const res = await axios.get(
       `http://localhost:5000/api/incidents/${ticketId}/report`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        responseType: "blob", // 🔥 IMPORTANT
+        responseType: "blob",
       }
     );
 
@@ -129,184 +157,324 @@ export default function StaffDashboard() {
     navigate("/login");
   };
 
-  if (loading) return <Loader2 className="animate-spin mx-auto mt-20 w-10 h-10" />;
-
   const addComment = async (ticketId) => {
     const token = localStorage.getItem("token");
-
     if (!commentText[ticketId]) return;
 
     await axios.post(
       `http://localhost:5000/api/incidents/${ticketId}/comment`,
       { message: commentText[ticketId] },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
     setCommentText((prev) => ({ ...prev, [ticketId]: "" }));
-    fetchTickets(); // refresh comments
+    fetchTickets();
   };
 
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "Resolved":
+        return (
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <CheckCircle2 className="w-3.5 h-3.5" /> Resolved
+          </span>
+        );
+      case "In Progress":
+        return (
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> In Progress
+          </span>
+        );
+      case "Closed":
+        return (
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
+            <AlertCircle className="w-3.5 h-3.5" /> Closed
+          </span>
+        );
+      default:
+        return (
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <Clock className="w-3.5 h-3.5" /> Open
+          </span>
+        );
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <Loader2 className="animate-spin text-indigo-500 w-12 h-12" />
+      </div>
+    );
+  }
+
   return (
-
-    <div className="min-h-screen bg-slate-900 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="absolute top-4 right-4">
-        <div className="relative group">
-          <button className="flex items-center gap-2 bg-slate-800 px-4 py-2 rounded-lg text-white border border-white/10 hover:bg-slate-700">
-            <User className="w-4 h-4" />
-            <span className="text-sm font-medium">
-              {user?.full_name}
-            </span>
-          </button>
-
-          {/* DROPDOWN */}
-          <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-white/10 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-            <div className="p-4 border-b border-white/10">
-              <p className="text-white font-semibold">{user?.full_name}</p>
-              <p className="text-slate-400 text-sm">{user?.email}</p>
-              <p className="text-slate-500 text-xs mt-1">
-                Dept: {user?.department}
-              </p>
-            </div>
-
-            <button
-              onClick={() => navigate("/staff/profile")}
-              className="w-full text-left px-4 py-2 text-slate-300 hover:bg-slate-800"
-            >
-              👤 View Profile
-            </button>
-
-            <button
-              onClick={logoutUser}
-              className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/10"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans selection:bg-indigo-500/30 pb-12">
+      {/* Background Ambient Glow */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
       </div>
-      <div className="fixed top-4 right-4 max-w-[90vw] sm:max-w-sm space-y-2 z-50">
-        {notifications.map((n, i) => (
-          <div
-            key={i}
-            className="bg-slate-800 border border-green-500/40 p-4 rounded-lg shadow-lg text-white"
+
+      {/* Header */}
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/80 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <motion.h1
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent"
           >
-            <h4 className="font-bold">{n.title}</h4>
-            <p className="text-sm text-slate-300">{n.message}</p>
-          </div>
-        ))}
-      </div>
-      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6">My Assigned Tickets</h1>
-      {error && (
-        <div className="bg-red-500/20 border border-red-500/40 text-red-200 p-4 rounded mb-4">
-          {error}
-        </div>
-      )}
+            Staff Dashboard
+          </motion.h1>
 
-      {tickets.length === 0 ? (
-        <p className="text-slate-400">No tickets assigned yet.</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 sm:gap-6">
-          {tickets.map((ticket) => (
-            <motion.div
-              key={ticket._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-lg border border-white/10 flex flex-col"
-            >
-              <h2 className="text-lg sm:text-xl font-semibold text-white mb-1">{ticket.title}</h2>
-              <p className="text-slate-400 text-sm sm:text-base mb-3 line-clamp-3">{ticket.description}</p>
-              <p className="text-sm text-slate-500 mb-3">Department: {ticket.department}</p>
-              <p className="text-sm text-slate-500 mb-3">Priority: {ticket.priority}</p>
-              <p className="text-sm text-slate-500 mb-3 flex items-center gap-2">
-                Status:
-                {ticket.status === "Open" && <Clock className="w-4 h-4 text-yellow-400" />}
-                {ticket.status === "In Progress" && <Loader2 className="animate-spin w-4 h-4 text-blue-400" />}
-                {ticket.status === "Resolved" && <CheckCircle2 className="w-4 h-4 text-green-400" />}
-                {ticket.status === "Closed" && <AlertCircle className="w-4 h-4 text-red-400" />}
-                {ticket.status}
-              </p>
-              <div className="flex gap-2 mt-3">
-                {ticket.status !== "Resolved" && (
+          <div className="flex items-center gap-4">
+            {/* User Dropdown */}
+            <div className="relative group">
+              <button className="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-3 py-2 rounded-lg border border-white/10 transition-all">
+                <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                  <User className="w-4 h-4" />
+                </div>
+                <div className="hidden sm:block text-left">
+                  <p className="text-sm font-medium text-white leading-none">
+                    {user?.full_name}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1 leading-none">
+                    {user?.department}
+                  </p>
+                </div>
+                <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+              </button>
+
+              <div className="absolute right-0 mt-2 w-64 bg-slate-900 border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50">
+                <div className="p-4 border-b border-white/10">
+                  <p className="text-white font-semibold">{user?.full_name}</p>
+                  <p className="text-slate-400 text-sm">{user?.email}</p>
+                </div>
+                <div className="p-2">
                   <button
-                    onClick={() => {
-                      console.log("RESOLVE TICKET ID:", ticket._id);
-                      updateStatus(ticket._id, "Resolved")
-                    }}
-                    className="px-3 py-1 bg-green-600 rounded text-white text-sm hover:bg-green-500"
+                    onClick={() => navigate("/staff/profile")}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-white/5 rounded-lg transition-colors"
                   >
-                    Mark Resolved
+                    <User className="w-4 h-4" /> View Profile
                   </button>
-
-                )}
-                {ticket.status !== "In Progress" && ticket.status !== "Resolved" && (
                   <button
-                    onClick={() => updateStatus(ticket._id, "In Progress")}
-                    className="px-3 py-1 bg-blue-600 rounded text-white text-sm hover:bg-blue-500"
+                    onClick={logoutUser}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                   >
-                    In Progress
-                  </button>
-                )}
-                <button onClick={() => getAiSuggestion(ticket)} className="px-3 py-1 bg-purple-600/20 text-purple-300 rounded text-xs sm:text-sm hover:bg-purple-600/20">
-                  🤖 AI Suggest Resolution
-                </button>
-                {aiSuggestion[ticket._id] && (
-                  <div className="mt-3 p-3 bg-slate-900 border border-green-500/30 rounded">
-                    <p className="text-green-400 text-sm">
-                      🤖 <span className="font-semibold">AI Suggestion:</span><br />
-                      {aiSuggestion[ticket._id]}
-                    </p>
-                  </div>
-                )}
-                <button
-                  onClick={() => downloadReport(ticket._id)}
-                  className="px-3 py-1 bg-slate-700 rounded text-white text-sm hover:bg-slate-600"
-                >
-                  📄 Download Report
-                </button>
-                <div className="mt-4">
-                  <h4 className="text-sm font-semibold text-slate-300 mb-2">
-                    💬 Comments
-                  </h4>
-
-                  {ticket.comments?.map((c, i) => (
-                    <div
-                      key={i}
-                      className="text-xs bg-slate-700 p-2 rounded mb-1 break-words"
-                    >
-                      <span className="text-green-400 font-semibold capitalize">
-                        {c.role}
-                      </span>
-                      : {c.message}
-                    </div>
-                  ))}
-
-                  <textarea
-                    value={commentText[ticket._id] || ""}
-                    onChange={(e) =>
-                      setCommentText((prev) => ({
-                        ...prev,
-                        [ticket._id]: e.target.value,
-                      }))
-                    }
-                    placeholder="Add work note..."
-                    className="w-full mt-2 p-2 rounded bg-slate-900 text-white text-xs sm:text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-
-                  <button
-                    onClick={() => addComment(ticket._id)}
-                    className="mt-2 w-full sm:w-auto px-3 py-1 bg-indigo-600 text-white rounded text-xs sm:text-sm hover:bg-indigo-500"
-                  >
-                    Add Comment
+                    <LogOut className="w-4 h-4" /> Logout
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Notifications Toast Area */}
+      <div className="fixed top-20 right-4 z-50 flex flex-col gap-3 pointer-events-none max-w-sm w-full">
+        <AnimatePresence>
+          {notifications.map((n, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, x: 50, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="pointer-events-auto bg-slate-800/90 backdrop-blur-md border-l-4 border-green-500 p-4 rounded-r-lg shadow-2xl flex gap-3"
+            >
+              <div className="bg-green-500/20 p-2 rounded-full h-fit">
+                <Bell className="w-4 h-4 text-green-400" />
+              </div>
+              <div>
+                <h4 className="font-bold text-white text-sm">{n.title}</h4>
+                <p className="text-xs text-slate-300 mt-1">{n.message}</p>
+              </div>
             </motion.div>
           ))}
+        </AnimatePresence>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-500/10 border border-red-500/20 text-red-200 p-4 rounded-xl mb-6 flex items-center gap-3"
+          >
+            <AlertCircle className="w-5 h-5" />
+            {error}
+          </motion.div>
+        )}
+
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-bold text-white">Assigned Tickets</h2>
+          <span className="bg-white/5 px-3 py-1 rounded-full text-xs text-slate-400 border border-white/10">
+            Total: {tickets.length}
+          </span>
         </div>
-      )}
+
+        {tickets.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-20 bg-white/5 rounded-3xl border border-white/5 border-dashed"
+          >
+            <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-slate-600" />
+            </div>
+            <p className="text-slate-400 text-lg">No tickets assigned yet.</p>
+            <p className="text-slate-600 text-sm">Enjoy your free time!</p>
+          </motion.div>
+        ) : (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+          >
+            {tickets.map((ticket) => (
+              <motion.div
+                key={ticket._id}
+                variants={itemVariants}
+                className="group bg-slate-900/50 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-indigo-500/30 transition-all duration-300 flex flex-col"
+              >
+                {/* Card Header */}
+                <div className="p-5 border-b border-white/5">
+                  <div className="flex justify-between items-start gap-4 mb-2">
+                    <h3 className="text-lg font-semibold text-white line-clamp-1 group-hover:text-indigo-400 transition-colors">
+                      {ticket.title}
+                    </h3>
+                    {getStatusBadge(ticket.status)}
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-white/5">
+                      {ticket.department}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded border ${
+                        ticket.priority === "High"
+                          ? "bg-red-500/10 text-red-400 border-red-500/20"
+                          : ticket.priority === "Medium"
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                      }`}
+                    >
+                      {ticket.priority}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-5 flex-1 flex flex-col gap-4">
+                  <p className="text-slate-400 text-sm line-clamp-3 leading-relaxed">
+                    {ticket.description}
+                  </p>
+
+                  {/* AI Section */}
+                  <div className="bg-slate-950/50 rounded-xl p-3 border border-white/5">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-purple-400 flex items-center gap-1.5">
+                        <Bot className="w-3.5 h-3.5" /> AI Assistant
+                      </span>
+                      <button
+                        onClick={() => getAiSuggestion(ticket)}
+                        className="text-[10px] bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-2 py-1 rounded transition-colors"
+                      >
+                        Generate Suggestion
+                      </button>
+                    </div>
+                    {aiSuggestion[ticket._id] ? (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        className="text-xs text-slate-300 bg-purple-500/5 p-2 rounded border border-purple-500/10"
+                      >
+                        {aiSuggestion[ticket._id]}
+                      </motion.div>
+                    ) : (
+                      <p className="text-[10px] text-slate-600 italic">
+                        No suggestion generated yet.
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Comments Section */}
+                  <div className="flex-1 min-h-[100px] flex flex-col">
+                    <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                      <MessageSquare className="w-3 h-3" /> Activity Log
+                    </h4>
+                    <div className="flex-1 bg-slate-950/30 rounded-lg p-3 mb-3 max-h-32 overflow-y-auto space-y-2 custom-scrollbar">
+                      {ticket.comments?.length > 0 ? (
+                        ticket.comments.map((c, i) => (
+                          <div key={i} className="text-xs">
+                            <span className="font-bold text-indigo-400">
+                              {c.role}:
+                            </span>{" "}
+                            <span className="text-slate-300">{c.message}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-slate-600 text-center py-2">
+                          No comments yet.
+                        </p>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={commentText[ticket._id] || ""}
+                        onChange={(e) =>
+                          setCommentText((prev) => ({
+                            ...prev,
+                            [ticket._id]: e.target.value,
+                          }))
+                        }
+                        placeholder="Add a note..."
+                        className="w-full bg-slate-950 border border-white/10 rounded-lg pl-3 pr-10 py-2 text-xs text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") addComment(ticket._id);
+                        }}
+                      />
+                      <button
+                        onClick={() => addComment(ticket._id)}
+                        className="absolute right-1 top-1 p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md transition-colors"
+                      >
+                        <Send className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Footer Actions */}
+                <div className="p-4 bg-slate-950/30 border-t border-white/5 grid grid-cols-2 gap-2">
+                  {ticket.status !== "Resolved" && (
+                    <button
+                      onClick={() => updateStatus(ticket._id, "Resolved")}
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-600/20 transition-all"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Resolve
+                    </button>
+                  )}
+                  {ticket.status !== "In Progress" &&
+                    ticket.status !== "Resolved" && (
+                      <button
+                        onClick={() => updateStatus(ticket._id, "In Progress")}
+                        className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 text-xs font-medium rounded-lg border border-blue-600/20 transition-all"
+                      >
+                        <Loader2 className="w-3.5 h-3.5" /> Start Work
+                      </button>
+                    )}
+                  <button
+                    onClick={() => downloadReport(ticket._id)}
+                    className="col-span-2 flex items-center justify-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-white/5 transition-all"
+                  >
+                    <FileText className="w-3.5 h-3.5" /> Download Report
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </main>
     </div>
   );
 }

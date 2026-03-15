@@ -17,6 +17,8 @@ import { Server } from "socket.io";
 import { initSocket } from "./socket.js";
 import { startAutoCloseJob } from "./jobs/autoCloseIncidents.js";
 
+import { runEscalationJob } from "./jobs/escalationJob.js";
+import accountAppealRoutes from "./routes/accountAppealRoutes.js";
 import authRoutes from "./routes/auth.js";
 import incidentRoutes from "./routes/incident.js";
 import adminRoutes from "./routes/admin.js";
@@ -29,7 +31,8 @@ import bootstrapRoutes from "./routes/bootstrap.js";
 import superadminRoutes from "./routes/superadminRoutes.js";
 
 import User from "./models/User.js";
-import { checkSlaBreach } from "./services/slaWatcher.js";
+// import { checkSlaBreach } from "./services/slaWatcher.js";
+import { runSlaPredictor } from "./controllers/slaPredictJob.js";
 import ticketRoutes from "./routes/tickets.js";
 import "./utils/slaJob.js";
 
@@ -116,17 +119,36 @@ io.use((socket, next) => {
   }
 });
 
-// 2️⃣ Connection handler AFTER middleware
 io.on("connection", (socket) => {
   console.log("✅ Socket connected:", socket.id);
 
-  socket.join(socket.user.role); // admin | staff | user
-  socket.join(socket.user.id);   // personal room
+  // personal room
+  socket.join(String(socket.user.id || socket.user._id));
+
+  // role room
+  if (socket.user.role) {
+    socket.join(socket.user.role); // admin / staff / user / super_admin
+  }
+
+  // optional department room
+  if (socket.user.department) {
+    socket.join(`dept:${socket.user.department}`);
+  }
+
+  socket.on("join_room", ({ role }) => {
+    if (role) {
+      socket.join(role);
+      console.log(`✅ Socket ${socket.id} joined room: ${role}`);
+    }
+  });
 
   socket.on("disconnect", () => {
     console.log("❌ Socket disconnected:", socket.id);
   });
 });
+
+// 2️⃣ Connection handler AFTER middleware
+
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
@@ -245,12 +267,16 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/users", userRoutes);
 app.use("/api/llm", llmRoutes);
 app.use("/api/bootstrap", bootstrapRoutes);
+app.use("/api/account-appeals", accountAppealRoutes);
 app.use("/api/superadmin", superadminRoutes);
 /* ---------------- SLA WATCHER ---------------- */
 setInterval(() => {
-  checkSlaBreach(io);
+  runSlaPredictor(io);
 }, 60000);
 
+setInterval(() => {
+  runEscalationJob(io);
+}, 60000);
 /* ---------------- START SERVER ---------------- */
 server.listen(5000, () => {
   console.log("🚀 Server running on port 5000");

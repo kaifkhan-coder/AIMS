@@ -1,6 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/autMiddleware.js";
-
+import { predictPriority } from "../controllers/aiController.js";
 const router = express.Router();
 
 router.post("/suggest-resolution", protect, async (req, res) => {
@@ -12,4 +12,5 @@ router.post("/suggest-resolution", protect, async (req, res) => {
   });
 });
 
+router.post("/predict-priority", protect, predictPriority);
 export default router;

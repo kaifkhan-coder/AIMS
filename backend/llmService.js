@@ -102,33 +102,46 @@ dotenv.config();
 
 import OpenAI from "openai";
 
-// NOTE: mongoose import not needed here; removed to avoid unused import warnings
-
 const openai = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
   baseURL: "https://openrouter.ai/api/v1",
 });
 
-// 🔒 INTERNAL DEPARTMENTS
 const INTERNAL_DEPARTMENTS = ["IT", "Network", "Hardware", "Accounts", "General"];
+const INTERNAL_PRIORITIES = ["Low", "Medium", "High", "Critical"];
 
-// 🔁 MAP LLM → INTERNAL
-const LLM_DEPT_MAP = {
-  Network: "Network",
-  Hardware: "Hardware",
-  Software: "IT",
-  Security: "IT",
-  Admin: "General",
-};
+/* ===============================
+   NORMALIZERS
+================================ */
+function normalizeDepartment(dept = "") {
+  const value = String(dept).trim().toLowerCase();
 
-// ✅ Keyword-based quick classifier (high accuracy for common cases)
+  if (value === "it" || value === "software" || value === "security") {
+    return "IT";
+  }
+  if (value === "network") return "Network";
+  if (value === "hardware") return "Hardware";
+  if (value === "accounts" || value === "account") return "Accounts";
+  return "General";
+}
+
+function normalizePriority(priority = "") {
+  const value = String(priority).trim().toLowerCase();
+
+  if (value === "critical") return "Critical";
+  if (value === "high") return "High";
+  if (value === "medium") return "Medium";
+  return "Low";
+}
+
+/* ===============================
+   KEYWORD CLASSIFIER
+================================ */
 function keywordClassify(title = "", description = "") {
   const text = `${title} ${description}`.toLowerCase();
 
-  // Network keywords (Cable cut included ✅)
   const networkKw = [
     "cable cut",
-    "cablecut",
     "lan",
     "ethernet",
     "router",
@@ -147,7 +160,6 @@ function keywordClassify(title = "", description = "") {
     "connection lost",
   ];
 
-  // Hardware keywords
   const hardwareKw = [
     "printer",
     "mouse",
@@ -165,7 +177,6 @@ function keywordClassify(title = "", description = "") {
     "screen broken",
   ];
 
-  // Accounts keywords
   const accountsKw = [
     "invoice",
     "billing",
@@ -173,85 +184,113 @@ function keywordClassify(title = "", description = "") {
     "refund",
     "salary",
     "expense",
-    "account",
-    "accounts",
+    "finance",
+    "accounts department",
   ];
 
-  // IT/Software keywords
   const itKw = [
-    "software",
-    "app",
-    "application",
     "login",
+    "unauthorized login",
+    "unauthorized access",
     "password",
+    "signin",
+    "sign in",
+    "authentication",
+    "access denied",
+    "account locked",
+    "software",
+    "application",
+    "app",
+    "server error",
     "bug",
-    "error",
     "crash",
-    "server",
     "database",
-    "api",
-    "not working",
+    "system error",
+    "security alert",
+    "malware",
+    "virus",
+    "phishing",
   ];
 
   const hasAny = (arr) => arr.some((k) => text.includes(k));
 
-  if (hasAny(networkKw)) return { department: "Network" };
-  if (hasAny(hardwareKw)) return { department: "Hardware" };
-  if (hasAny(accountsKw)) return { department: "Accounts" };
-  if (hasAny(itKw)) return { department: "IT" };
+  if (hasAny(itKw)) return { department: "IT", priority: "High" };
+  if (hasAny(networkKw)) return { department: "Network", priority: "Medium" };
+  if (hasAny(hardwareKw)) return { department: "Hardware", priority: "Medium" };
+  if (hasAny(accountsKw)) return { department: "Accounts", priority: "Medium" };
 
-  return null; // no keyword match
+  return null;
 }
 
-// ✅ Extract JSON safely even if model adds extra text
+/* ===============================
+   SAFE JSON PARSER
+================================ */
 function safeJsonParse(rawText = "") {
-  // Try direct parse
   try {
     return JSON.parse(rawText);
-  } catch (e) {}
+  } catch {}
 
-  // Try to extract first JSON object block
   const match = rawText.match(/\{[\s\S]*\}/);
   if (!match) return null;
 
   try {
     return JSON.parse(match[0]);
-  } catch (e) {
+  } catch {
     return null;
   }
 }
+
+/* ===============================
+   GENERIC LLM ASK
+================================ */
+export const askLLM = async (prompt) => {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant for IT incident management.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.3,
+    });
+
+    return response.choices?.[0]?.message?.content?.trim() || "";
+  } catch (err) {
+    console.error("LLM ASK ERROR:", err.message);
+    return "";
+  }
+};
 
 /* ===============================
    INCIDENT CLASSIFICATION
 ================================ */
 export async function classifyIncident(title, description) {
   try {
-    // 1) Keyword-first (fast & stable)
+    // 1. Keyword first
     const kw = keywordClassify(title, description);
-    if (kw?.department) {
-      return {
-        department: kw.department,
-        priority: "Low", // default priority; you can add keyword priority rules too
-      };
+    if (kw) {
+      return kw;
     }
 
-    // 2) LLM classification fallback
+    // 2. LLM fallback
     const prompt = `
-You are classifying an IT incident.
-Return ONLY valid JSON (no markdown, no extra text).
+You are classifying an incident for an internal helpdesk system.
 
-Schema:
+Return ONLY valid JSON:
 {
-  "department": "Network" | "Hardware" | "Software" | "Security" | "Admin",
-  "priority": "High" | "Medium" | "Low"
+  "department": "IT" | "Network" | "Hardware" | "Accounts" | "General",
+  "priority": "Low" | "Medium" | "High" | "Critical"
 }
 
 Rules:
-- Network: internet, wifi, router, switch, LAN, DNS, IP, cable cut, connectivity issues
-- Hardware: physical devices (printer, monitor, keyboard, mouse, laptop)
-- Software: app bugs, login issues, server/app errors
-- Security: malware, suspicious access, phishing, breaches
-- Admin: general admin requests
+- IT = login issues, unauthorized access, password issues, software bugs, server/app problems, security-related login events
+- Network = wifi, internet, router, switch, DNS, LAN, connectivity issues
+- Hardware = printer, keyboard, mouse, monitor, CPU, laptop physical issues
+- Accounts = billing, invoice, refund, salary, finance
+- General = anything else
 
 Incident:
 Title: "${title}"
@@ -264,23 +303,16 @@ Description: "${description}"
       messages: [{ role: "user", content: prompt }],
     });
 
-    const raw = (response.choices?.[0]?.message?.content || "").trim();
+    const raw = response.choices?.[0]?.message?.content || "";
     const cleaned = raw.replace(/```json|```/g, "").trim();
-
     const result = safeJsonParse(cleaned);
 
-    // 3) Validation + mapping
-    const deptFromLlm = result?.department;
-    const prFromLlm = result?.priority;
-
-    const mappedDepartment = LLM_DEPT_MAP[deptFromLlm] || "General";
-
     return {
-      department: INTERNAL_DEPARTMENTS.includes(mappedDepartment)
-        ? mappedDepartment
+      department: INTERNAL_DEPARTMENTS.includes(normalizeDepartment(result?.department))
+        ? normalizeDepartment(result?.department)
         : "General",
-      priority: ["High", "Medium", "Low"].includes(prFromLlm)
-        ? prFromLlm
+      priority: INTERNAL_PRIORITIES.includes(normalizePriority(result?.priority))
+        ? normalizePriority(result?.priority)
         : "Low",
     };
   } catch (err) {

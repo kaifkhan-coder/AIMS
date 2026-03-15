@@ -155,7 +155,7 @@ useEffect(() => {
       <Stat label="Total" value={stats.total} />
       <Stat label="Open" value={stats.open} />
       <Stat label="In Progress" value={stats.inProgress} />
-      <Stat label="Resolved" value={stats.resolved} />
+      <Stat label="Resolved" value={stats.resolvedIncidents} />
       <Stat label="Closed" value={stats.closed} />
     </div>
   </div>
