@@ -682,19 +682,47 @@ export default function SuperAdminDashboard() {
                           <div className="w-1 h-6 bg-red-500 rounded-full" />
                           SLA Breaches Trend
                         </h3>
-                        {slaLine.length === 0 ? (
-  <p className="text-slate-500 text-sm">No SLA breach trend data available</p>
-) : (
-  <ResponsiveContainer width="100%" height="100%">
-    <LineChart data={slaLine}>
-      <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
-      <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-      <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-      <Tooltip contentStyle={{ backgroundColor: "#1e293b", borderColor: "#334155", borderRadius: "12px" }} />
-      <Line type="monotone" dataKey="count" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} />
-    </LineChart>
-  </ResponsiveContainer>
-)}
+<div className="h-[280px]">
+  {slaLine.length === 0 ? (
+    <div className="h-full flex items-center justify-center">
+      <p className="text-slate-500 text-sm">No SLA breach trend data available</p>
+    </div>
+  ) : (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={slaLine}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+        <XAxis
+          dataKey="day"
+          stroke="#94a3b8"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+        />
+        <YAxis
+          stroke="#94a3b8"
+          fontSize={12}
+          tickLine={false}
+          axisLine={false}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "#1e293b",
+            borderColor: "#334155",
+            borderRadius: "12px",
+          }}
+        />
+        <Line
+          type="monotone"
+          dataKey="count"
+          stroke="#ef4444"
+          strokeWidth={3}
+          dot={{ fill: "#ef4444", r: 4 }}
+          activeDot={{ r: 6 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  )}
+</div>
                         <div className="h-[280px]">
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={slaLine}>
