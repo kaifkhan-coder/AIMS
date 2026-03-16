@@ -1252,7 +1252,7 @@ import sendEmail from "../utils/sendEmail.js";
 import KnowledgeBase from "../models/knowledgeBase.js";
 import { askLLM } from "../llmService.js";
 import Feedback from "../models/feedback.js";
-
+// import AuditLogModel from "../models/AuditLog.js";
 /* ===============================
    HELPERS
 ================================ */
@@ -1625,7 +1625,6 @@ export const updateIncidentStatus = async (req, res) => {
 
     const currentStatus = incident.status;
 
-    // Staff rules
     if (req.user.role === "staff") {
       const allowedNext = allowedTransitions[currentStatus] || [];
 
@@ -1635,7 +1634,6 @@ export const updateIncidentStatus = async (req, res) => {
         });
       }
 
-      // staff cannot close directly
       if (newStatus === "Closed") {
         return res.status(403).json({
           message: "Staff cannot close incidents. Admin approval required.",
@@ -1643,15 +1641,16 @@ export const updateIncidentStatus = async (req, res) => {
       }
     }
 
-    // Admin/Super Admin can close directly if needed
+    if ((req.user.role === "admin" || req.user.role === "super_admin") && newStatus === "Closed") {
+      return res.status(400).json({
+        message: "Use approve-close endpoint to close a resolved incident.",
+      });
+    }
+
     incident.status = newStatus;
 
     if (newStatus === "Resolved") {
       incident.resolvedAt = new Date();
-    }
-
-    if (newStatus === "Closed") {
-      incident.closedAt = new Date();
     }
 
     await incident.save();
@@ -1685,36 +1684,29 @@ export const updateIncidentStatus = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 export const approveCloseIncident = async (req, res) => {
   try {
-    if (!["admin", "super_admin"].includes(req.user.role)) {
-      return res.status(403).json({ message: "Only admin can approve close" });
-    }
-
     const incident = await Incident.findById(req.params.id);
+
     if (!incident) {
       return res.status(404).json({ message: "Incident not found" });
     }
 
     if (incident.status !== "Resolved") {
       return res.status(400).json({
-        message: "Only resolved incidents can be closed",
+        message: "Only resolved incidents can be approved for close",
       });
     }
 
     const previousStatus = incident.status;
+
     incident.status = "Closed";
     incident.closedAt = new Date();
     await incident.save();
 
-    await Notification.create({
-      user: incident.createdBy,
-      role: "user",
-      message: `📁 Your ticket ${incident.ticketId} has been closed by admin`,
-    });
-
     await AuditLog.create({
-      action: "INCIDENT_CLOSE_APPROVED",
+      action: "TICKET_CLOSED",
       incidentId: incident._id,
       updatedBy: req.user._id,
       details: {
@@ -1725,46 +1717,37 @@ export const approveCloseIncident = async (req, res) => {
       },
     });
 
-    res.json({
-      message: "Incident closed successfully",
+    return res.json({
+      message: "Incident close approved",
       incident,
     });
   } catch (err) {
     console.error("APPROVE CLOSE ERROR:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
+
 export const rejectCloseIncident = async (req, res) => {
   try {
-    if (!["admin", "super_admin"].includes(req.user.role)) {
-      return res.status(403).json({ message: "Only admin can reject close" });
-    }
-
     const incident = await Incident.findById(req.params.id);
+
     if (!incident) {
       return res.status(404).json({ message: "Incident not found" });
     }
 
     if (incident.status !== "Resolved") {
       return res.status(400).json({
-        message: "Only resolved incidents can be sent back",
+        message: "Only resolved incidents can be rejected",
       });
     }
 
     const previousStatus = incident.status;
+
     incident.status = "In Progress";
     await incident.save();
 
-    if (incident.assignedTo) {
-      await Notification.create({
-        user: incident.assignedTo,
-        role: "staff",
-        message: `🔁 Ticket ${incident.ticketId} was rejected for closure and sent back to In Progress`,
-      });
-    }
-
     await AuditLog.create({
-      action: "INCIDENT_CLOSE_REJECTED",
+      action: "TICKET_CLOSE_REJECTED",
       incidentId: incident._id,
       updatedBy: req.user._id,
       details: {
@@ -1775,15 +1758,15 @@ export const rejectCloseIncident = async (req, res) => {
       },
     });
 
-    res.json({
-      message: "Closure rejected. Ticket sent back to In Progress",
+    return res.json({
+      message: "Close request rejected",
       incident,
     });
   } catch (err) {
     console.error("REJECT CLOSE ERROR:", err);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
-}; 
+};
 
 export const reopenTicket = async (req, res) => {
   try {

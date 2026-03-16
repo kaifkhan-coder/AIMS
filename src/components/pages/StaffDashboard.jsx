@@ -118,9 +118,11 @@ export default function StaffDashboard() {
     fetchTickets();
   }, []);
 
-  const updateStatus = async (id, status) => {
+const updateStatus = async (id, status) => {
+  try {
     const token = localStorage.getItem("token");
-    await axios.put(
+
+    const res = await axios.put(
       `http://localhost:5000/api/incidents/${id}/status`,
       { status },
       {
@@ -129,8 +131,15 @@ export default function StaffDashboard() {
         },
       }
     );
+
+    console.log("UPDATE STATUS RESPONSE:", res.data);
     fetchTickets();
-  };
+  } catch (err) {
+    console.error("UPDATE STATUS ERROR:", err);
+    console.log("BACKEND ERROR:", err?.response?.data);
+    alert(err?.response?.data?.message || "Failed to update status");
+  }
+};
 
   const downloadReport = async (ticketId) => {
     const token = localStorage.getItem("token");
@@ -189,6 +198,12 @@ export default function StaffDashboard() {
         return (
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
             <AlertCircle className="w-3.5 h-3.5" /> Closed
+          </span>
+        );
+      case "Reopened":
+        return (
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+            <AlertCircle className="w-3.5 h-3.5" /> Reopened
           </span>
         );
       default:
@@ -445,15 +460,24 @@ export default function StaffDashboard() {
                 </div>
 
                 {/* Card Footer Actions */}
-                <div className="p-4 bg-slate-950/30 border-t border-white/5 grid grid-cols-2 gap-2">
-                  {ticket.status !== "Resolved" && (
-                    <button
-                      onClick={() => updateStatus(ticket._id, "Resolved")}
-                      className="flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-600/20 transition-all"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Resolve
-                    </button>
-                  )}
+                {/* <div className="p-4 bg-slate-950/30 border-t border-white/5 grid grid-cols-2 gap-2">
+{ticket.status === "In Progress" && (
+  <button
+    onClick={() => updateStatus(ticket._id, "Resolved")}
+    className="flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-600/20 transition-all"
+  >
+    <CheckCircle2 className="w-3.5 h-3.5" /> Resolve
+  </button>
+)}
+
+{(ticket.status === "Open" || ticket.status === "Reopened") && (
+  <button
+    onClick={() => updateStatus(ticket._id, "In Progress")}
+    className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 text-xs font-medium rounded-lg border border-blue-600/20 transition-all"
+  >
+    <Loader2 className="w-3.5 h-3.5" /> Start Work
+  </button>
+)}
                   {ticket.status !== "In Progress" &&
                     ticket.status !== "Resolved" && (
                       <button
@@ -469,7 +493,33 @@ export default function StaffDashboard() {
                   >
                     <FileText className="w-3.5 h-3.5" /> Download Report
                   </button>
-                </div>
+                </div> */}
+                <div className="p-4 bg-slate-950/30 border-t border-white/5 grid grid-cols-2 gap-2">
+  {(ticket.status === "Open" || ticket.status === "Reopened") && (
+    <button
+      onClick={() => updateStatus(ticket._id, "In Progress")}
+      className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 text-xs font-medium rounded-lg border border-blue-600/20 transition-all"
+    >
+      <Loader2 className="w-3.5 h-3.5" /> Start Work
+    </button>
+  )}
+
+  {ticket.status === "In Progress" && (
+    <button
+      onClick={() => updateStatus(ticket._id, "Resolved")}
+      className="flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-600/20 transition-all"
+    >
+      <CheckCircle2 className="w-3.5 h-3.5" /> Resolve
+    </button>
+  )}
+
+  <button
+    onClick={() => downloadReport(ticket._id)}
+    className="col-span-2 flex items-center justify-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-white/5 transition-all"
+  >
+    <FileText className="w-3.5 h-3.5" /> Download Report
+  </button>
+</div>
               </motion.div>
             ))}
           </motion.div>
