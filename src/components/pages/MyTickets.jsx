@@ -26,7 +26,7 @@ export default function MyTickets() {
         setLoading(true);
         setError("");
 
-        const res = await axios.get(`${process.env.BACKEND_URL}/api/incidents/my`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/incidents/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -51,7 +51,7 @@ export default function MyTickets() {
 
     try {
       const res = await axios.patch(
-        `${process.env.BACKEND_URL}/api/incidents/${id}/reopen`,
+        `${import.meta.env.VITE_API_URL}/api/incidents/${id}/reopen`,
         { reason: "User reopened the ticket" },
         {
           headers: {
@@ -345,7 +345,7 @@ export default function MyTickets() {
 //         setLoading(true);
 //         setError("");
 
-//         const res = await axios.get("${process.env.BACKEND_URL}/api/incidents/my", {
+//         const res = await axios.get("${import.meta.env.VITE_API_URL}/api/incidents/my", {
 //           headers: { Authorization: `Bearer ${token}` },
 //         });
 
@@ -369,7 +369,7 @@ export default function MyTickets() {
 //     if (!window.confirm("Are you sure you want to delete this ticket?")) return;
 
 //     try {
-//       await axios.delete(`${process.env.BACKEND_URL}/api/incidents/${ticketId}`, {
+//       await axios.delete(`${import.meta.env.VITE_API_URL}/api/incidents/${ticketId}`, {
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 
@@ -389,7 +389,7 @@ export default function MyTickets() {
 
 //     try {
 //       const res = await axios.patch(
-//         `${process.env.BACKEND_URL}/api/incidents/${ticketId}/reopen`,
+//         `${import.meta.env.VITE_API_URL}/api/incidents/${ticketId}/reopen`,
 //         { reason: "User reopened the ticket" },
 //         {
 //           headers: { Authorization: `Bearer ${token}` },

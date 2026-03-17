@@ -199,7 +199,7 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    socketRef.current = io("${process.env.BACKEND_URL}", {
+    socketRef.current = io("${import.meta.env.VITE_API_URL}", {
       transports: ["websocket"],
       auth: {
         token: localStorage.getItem("token"),
@@ -1570,7 +1570,7 @@ const rejectClose = async (id) => {
 
 //   // Socket.io Logic
 //   useEffect(() => {
-//     socketRef.current = io("${process.env.BACKEND_URL}", {
+//     socketRef.current = io("${import.meta.env.VITE_API_URL}", {
 //       transports: ["websocket"],
 //       auth: {
 //         token: localStorage.getItem("token"),

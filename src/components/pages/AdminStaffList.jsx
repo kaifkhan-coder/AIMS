@@ -8,7 +8,7 @@ export default function AdminStaffList() {
     const fetchStaff = async () => {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${process.env.BACKEND_URL}/api/admin/staff`,
+        `${import.meta.env.VITE_API_URL}/api/admin/staff`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setStaff(res.data);

@@ -31,7 +31,7 @@ function App() {
     if (!token) return;
 
     // ✅ create socket once
-    socketRef.current = io("${process.env.BACKEND_URL}", {
+    socketRef.current = io("${import.meta.env.VITE_API_URL}", {
       transports: ["websocket"],
       auth: { token },
     });

@@ -243,7 +243,7 @@ app.get("/auth/google",
 app.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login.html" }),
   (req, res) => {
-  res.redirect(`${process.env.BACKEND_URL}/user`)
+  res.redirect(`${import.meta.env.VITE_API_URL}/user`)
   }
 );
 
@@ -255,7 +255,7 @@ app.get("/auth/github",
 app.get("/auth/github/callback",
   passport.authenticate("github", { failureRedirect: "/login.html" }),
   (req, res) => {
-  res.redirect(`${process.env.BACKEND_URL}/user`)
+  res.redirect(`${import.meta.env.VITE_API_URL}/user`)
   }
 );
 

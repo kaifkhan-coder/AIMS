@@ -78,7 +78,7 @@ export default function StaffDashboard() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get("${process.env.BACKEND_URL}/api/incidents/assigned", {
+      const res = await axios.get("${import.meta.env.VITE_API_URL}/api/incidents/assigned", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTickets(res.data.tickets);
@@ -93,7 +93,7 @@ export default function StaffDashboard() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "${process.env.BACKEND_URL}/api/ai/suggest-resolution",
+        "${import.meta.env.VITE_API_URL}/api/ai/suggest-resolution",
         {
           title: ticket.title,
           description: ticket.description,
@@ -123,7 +123,7 @@ const updateStatus = async (id, status) => {
     const token = localStorage.getItem("token");
 
     const res = await axios.put(
-      `${process.env.BACKEND_URL}/api/incidents/${id}/status`,
+      `${import.meta.env.VITE_API_URL}/api/incidents/${id}/status`,
       { status },
       {
         headers: {
@@ -144,7 +144,7 @@ const updateStatus = async (id, status) => {
   const downloadReport = async (ticketId) => {
     const token = localStorage.getItem("token");
     const res = await axios.get(
-      `${process.env.BACKEND_URL}/api/incidents/${ticketId}/report`,
+      `${import.meta.env.VITE_API_URL}/api/incidents/${ticketId}/report`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -171,7 +171,7 @@ const updateStatus = async (id, status) => {
     if (!commentText[ticketId]) return;
 
     await axios.post(
-      `${process.env.BACKEND_URL}/api/incidents/${ticketId}/comment`,
+      `${import.meta.env.VITE_API_URL}/api/incidents/${ticketId}/comment`,
       { message: commentText[ticketId] },
       { headers: { Authorization: `Bearer ${token}` } }
     );

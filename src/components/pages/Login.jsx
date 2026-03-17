@@ -232,11 +232,11 @@ const handleSubmit = async (e) => {
               >
                 {loading ? <Loader2 className="animate-spin mx-auto" /> : "Sign In"}
               </motion.button>
-              <p className="text-center text-slate-400 mt-6">Or login with</p>
+              {/* <p className="text-center text-slate-400 mt-6">Or login with</p> */}
 
               {/* <div className="flex flex-col gap-3 mt-4">
                 <a
-                  href={`${process.env.BACKEND_URL}/auth/google`}
+                  href={`${import.meta.env.VITE_API_URL}/auth/google`}
                   className="flex items-center justify-center gap-3 py-3 rounded-xl
                bg-white/10 hover:bg-white/20 text-white transition"
                 >
@@ -249,7 +249,7 @@ const handleSubmit = async (e) => {
                 </a>
 
                 <a
-href={`${process.env.BACKEND_URL}/auth/github`}
+href={`${import.meta.env.VITE_API_URL}/auth/github`}
                   className="flex items-center justify-center gap-3 py-3 rounded-xl
                bg-white/10 hover:bg-white/20 text-white transition bg-amber-100/20"
                 >

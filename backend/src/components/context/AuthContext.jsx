@@ -20,7 +20,7 @@
 //     const fetchProfile = async () => {
 //       try {
 //         const res = await axios.get(
-//           "${process.env.BACKEND_URL}/api/users/profile",
+//           "${import.meta.env.VITE_API_URL}/api/users/profile",
 //           {
 //             headers: {
 //               Authorization: `Bearer ${storedToken}`,
@@ -91,7 +91,7 @@
 
 //     const fetchProfile = async () => {
 //       try {
-//         // const res = await api.get("${process.env.BACKEND_URL}/api/users/profile", {
+//         // const res = await api.get("${import.meta.env.VITE_API_URL}/api/users/profile", {
 //         //   headers: {
 //         //     Authorization: `Bearer ${storedToken}`,
 //         //   },

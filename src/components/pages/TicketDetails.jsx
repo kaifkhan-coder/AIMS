@@ -9,7 +9,7 @@ export default function TicketDetails({ ticketId, onStatusChange }) {
 
   const fetchTicket = async () => {
     const res = await axios.get(
-      `${process.env.BACKEND_URL}/api/incidents/${ticketId}`,
+      `${import.meta.env.VITE_API_URL}/api/incidents/${ticketId}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     setTicket(res.data);
@@ -23,7 +23,7 @@ export default function TicketDetails({ ticketId, onStatusChange }) {
     if (!comment.trim()) return;
 
     await axios.post(
-      `${process.env.BACKEND_URL}/api/incidents/${ticketId}/comment`,
+      `${import.meta.env.VITE_API_URL}/api/incidents/${ticketId}/comment`,
       { message: comment },
       { headers: { Authorization: `Bearer ${token}` } }
     );
