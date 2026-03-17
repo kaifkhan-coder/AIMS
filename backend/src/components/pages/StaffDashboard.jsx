@@ -78,7 +78,7 @@ export default function StaffDashboard() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get("${import.meta.env.VITE_API_URL}/api/incidents/assigned", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/incidents/assigned`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTickets(res.data.tickets);
@@ -93,7 +93,7 @@ export default function StaffDashboard() {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post(
-        "${import.meta.env.VITE_API_URL}/api/ai/suggest-resolution",
+        `${import.meta.env.VITE_API_URL}/api/ai/suggest-resolution`,
         {
           title: ticket.title,
           description: ticket.description,

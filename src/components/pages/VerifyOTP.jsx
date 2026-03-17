@@ -92,7 +92,7 @@ export default function VerifyOTP() {
   const resendOtp = async () => {
     try {
       await axios.post(
-        "${import.meta.env.VITE_API_URL}/api/auth/resend-otp",
+        `${import.meta.env.VITE_API_URL}/api/auth/resend-otp`,
         { email }
       );
       alert("OTP resent");

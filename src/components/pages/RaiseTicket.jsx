@@ -109,7 +109,7 @@
       try {
         const res = await axios.post(
           `${import.meta.env.VITE_API_URL}/api/ai/predict-priority`,
-          // "${import.meta.env.VITE_API_URL}/api/ai/predict-priority",
+          // `${import.meta.env.VITE_API_URL}/api/ai/predict-priority`,
           {
             title: title.trim(),
             description: description.trim(),
@@ -196,7 +196,7 @@
 
   const res = await axios.post(
     `${import.meta.env.VITE_API_URL}/api/incidents/root-cause`,
-    // "${import.meta.env.VITE_API_URL}/api/incidents/root-cause",
+    // `${import.meta.env.VITE_API_URL}/api/incidents/root-cause`,
     {
       title,
       description

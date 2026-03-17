@@ -1,5 +1,5 @@
 import axios from "axios";
-const API = "${import.meta.env.VITE_API_URL}/api/admin";
+const API = `${import.meta.env.VITE_API_URL}/api/admin`;
 
 export const createStaff = (data) => {
   // console.log("Creating staff with data:", data);

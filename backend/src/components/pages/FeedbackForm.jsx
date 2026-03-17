@@ -72,7 +72,7 @@ export default function FeedbackForm({ incidentId, onSubmitted }) {
       setSubmitError(null);
 
       await axios.post(
-        "${import.meta.env.VITE_API_URL}/api/incidents/feedback",
+        `${import.meta.env.VITE_API_URL}/api/incidents/feedback`,
         {
           incidentId,
           rating: data.rating,

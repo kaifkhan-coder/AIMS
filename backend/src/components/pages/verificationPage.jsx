@@ -20,7 +20,7 @@ export default function VerifyOTP() {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post("${import.meta.env.VITE_API_URL}/api/auth/verify-otp", {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
         email,
         otp
       });
@@ -34,7 +34,7 @@ export default function VerifyOTP() {
   };
 
   const resendOtp = async () => {
-    await axios.post("${import.meta.env.VITE_API_URL}/api/auth/resend-otp", { email });
+    await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/resend-otp`, { email });
     setTimeLeft(600); // reset timer
     alert("OTP resent to your email");
   };

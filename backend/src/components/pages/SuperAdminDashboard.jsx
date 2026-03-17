@@ -210,7 +210,7 @@ export default function SuperAdminDashboard() {
 
   // ---------- Socket ----------
   useEffect(() => {
-    socketRef.current = io("${import.meta.env.VITE_API_URL}", {
+    socketRef.current = io(`${import.meta.env.VITE_API_URL}`, {
       transports: ["websocket"],
       auth: { token: localStorage.getItem("token") },
     });

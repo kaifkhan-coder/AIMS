@@ -11,7 +11,7 @@ async function checkNetwork() {
   if (!res.alive) {
     console.log("❌ Network Down!");
 
-    await axios.post("${import.meta.env.VITE_API_URL}/api/incidents/auto", {
+    await axios.post(`${import.meta.env.VITE_API_URL}/api/incidents/auto`, {
       title: "Network Down",
       description: `Unable to reach ${TARGET} || ${ALTERNET}`,
       priority: "High",

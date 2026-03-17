@@ -36,7 +36,7 @@ const handlePhotoUpload = async (e) => {
     }
 
     const res = await axios.post(
-      "${import.meta.env.VITE_API_URL}/api/users/upload-photo",
+      `${import.meta.env.VITE_API_URL}/api/users/upload-photo`,
       form,
       {
         headers: {
@@ -61,7 +61,7 @@ useEffect(() => {
   const fetchStats = async () => {
     try {
       const res = await axios.get(
-        "${import.meta.env.VITE_API_URL}/api/users/ticket-stats",
+        `${import.meta.env.VITE_API_URL}/api/users/ticket-stats`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -200,7 +200,7 @@ useEffect(() => {
                 onClick={async () => {
                   try {
                     await axios.put(
-                      "${import.meta.env.VITE_API_URL}/api/users/change-password",
+                      `${import.meta.env.VITE_API_URL}/api/users/change-password`,
                       { oldPassword: oldPass, newPassword: newPass },
                       { headers: { Authorization: `Bearer ${token}` } }
                     );

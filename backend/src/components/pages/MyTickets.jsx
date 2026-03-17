@@ -26,7 +26,7 @@ export default function MyTickets() {
         setLoading(true);
         setError("");
 
-        const res = await axios.get("${import.meta.env.VITE_API_URL}/api/incidents/my", {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/incidents/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -345,7 +345,7 @@ export default function MyTickets() {
 //         setLoading(true);
 //         setError("");
 
-//         const res = await axios.get("${import.meta.env.VITE_API_URL}/api/incidents/my", {
+//         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/incidents/my`, {
 //           headers: { Authorization: `Bearer ${token}` },
 //         });
 
