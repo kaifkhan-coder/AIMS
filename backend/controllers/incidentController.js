@@ -1249,7 +1249,7 @@ import { sendEmailWithAttachment } from "../utils/sendEmailStaff.js";
 import fs from "fs";
 import path from "path";
 import sendEmail from "../utils/sendEmail.js";
-import KnowledgeBase from "../models/knowledgeBase.js";
+import KnowledgeBase from "../models/KnowledgeBase.js";
 import { askLLM } from "../llmService.js";
 import Feedback from "../models/feedback.js";
 // import AuditLogModel from "../models/AuditLog.js";
