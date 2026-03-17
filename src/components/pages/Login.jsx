@@ -234,7 +234,7 @@ const handleSubmit = async (e) => {
               </motion.button>
               <p className="text-center text-slate-400 mt-6">Or login with</p>
 
-              <div className="flex flex-col gap-3 mt-4">
+              {/* <div className="flex flex-col gap-3 mt-4">
                 <a
                   href={`${process.env.BACKEND_URL}/auth/google`}
                   className="flex items-center justify-center gap-3 py-3 rounded-xl
@@ -260,9 +260,7 @@ href={`${process.env.BACKEND_URL}/auth/github`}
                   />
                   Continue with GitHub
                 </a>
-              </div>
-
-
+              </div> */}
             </form>
 
             <p className="text-center text-slate-400 mt-6">
