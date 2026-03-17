@@ -1,7 +1,7 @@
 import sendEmail from "../utils/sendEmail.js";
 import { otpEmailTemplate } from "../utils/emailTemplates.js";
 import User from "../models/User.js";
-import Staff from "../models/Staff.js";
+import Staff from "../models/staff.js";
 import Incident from "../models/incident.js";
 import bcrypt from "bcryptjs";
 import openai, { classifyIncident } 
