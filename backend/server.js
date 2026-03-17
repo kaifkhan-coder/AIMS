@@ -158,7 +158,7 @@ io.on("connection", (socket) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`
+  callbackURL: "https://aims-18.onrender.com/auth/google/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     let user = await User.findOne({ googleId: profile.id });
@@ -188,7 +188,7 @@ passport.use(new GoogleStrategy({
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: `${process.env.BACKEND_URL}/auth/github/callback`
+  callbackURL: "https://aims-18.onrender.com/auth/github/callback"
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails && profile.emails[0]
