@@ -48,11 +48,16 @@ const io = new Server(server, {
   }
 });
 
+// ✅ Correct
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: [
+    "http://localhost:5173",
+    "https://aims-5k31.vercel.app"  // Vercel URL add karo
+  ],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   credentials: true
 }));
+
 app.use(express.json());
 
 app.use(session({
@@ -153,7 +158,7 @@ io.on("connection", (socket) => {
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "${import.meta.env.VITE_API_URL}/auth/google/callback"
+  callbackURL: `${import.meta.env.VITE_API_URL}/auth/google/callback`
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     let user = await User.findOne({ googleId: profile.id });
@@ -183,7 +188,7 @@ passport.use(new GoogleStrategy({
 passport.use(new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: "${import.meta.env.VITE_API_URL}/auth/github/callback"
+  callbackURL: `${import.meta.env.VITE_API_URL}/auth/github/callback`
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails && profile.emails[0]
@@ -238,7 +243,7 @@ app.get("/auth/google",
 app.get("/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login.html" }),
   (req, res) => {
-  res.redirect("http://localhost:5173/user")
+  res.redirect(`${import.meta.env.VITE_API_URL}/user`)
   }
 );
 
@@ -250,7 +255,7 @@ app.get("/auth/github",
 app.get("/auth/github/callback",
   passport.authenticate("github", { failureRedirect: "/login.html" }),
   (req, res) => {
-  res.redirect("http://localhost:5173/user")
+  res.redirect(`${import.meta.env.VITE_API_URL}/user`)
   }
 );
 
