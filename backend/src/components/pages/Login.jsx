@@ -236,7 +236,7 @@ const handleSubmit = async (e) => {
 
               <div className="flex flex-col gap-3 mt-4">
                 <a
-                  href="http://localhost:5000/auth/google"
+                  href="${import.meta.env.VITE_API_URL}/auth/google"
                   className="flex items-center justify-center gap-3 py-3 rounded-xl
                bg-white/10 hover:bg-white/20 text-white transition"
                 >
@@ -249,7 +249,7 @@ const handleSubmit = async (e) => {
                 </a>
 
                 <a
-                  href="http://localhost:5000/auth/github"
+                  href="${import.meta.env.VITE_API_URL}/auth/github"
                   className="flex items-center justify-center gap-3 py-3 rounded-xl
                bg-white/10 hover:bg-white/20 text-white transition bg-amber-100/20"
                 >

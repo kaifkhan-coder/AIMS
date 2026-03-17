@@ -9,7 +9,7 @@ export default function VerifyOTP() {
 
   const submitOTP = async () => {
     const res = await axios.post(
-      "http://localhost:5000/api/auth/verify-otp",
+      `${import.meta.env.VITE_API_URL}/api/auth/verify-otp`,
       {
         userId: state.userId,
         otp,

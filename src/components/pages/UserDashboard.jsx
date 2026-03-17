@@ -134,7 +134,7 @@
 // useEffect(() => {
 //   if (!user) return;
 
-//   const socket = io("http://localhost:5000", {
+//   const socket = io("${import.meta.env.VITE_API_URL}", {
 //     auth: { token: localStorage.getItem("token") }
 //   });
 
@@ -161,7 +161,7 @@
 //   // Logic preserved: Fetch tickets (commented out in original, but structure kept if needed)
 //   // useEffect(() => {
 //   //   if (!user) return;
-//   //   axios.get("http://localhost:5000/api/tickets", {
+//   //   axios.get("${import.meta.env.VITE_API_URL}/api/tickets", {
 //   //     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
 //   //   }).then(res => setTickets(res.data)).catch(console.error);
 //   // }, [user]);
@@ -454,7 +454,7 @@ export default function UserDashboard() {
   useEffect(() => {
     if (!user) return;
 
-    const socket = io("http://localhost:5000", {
+    const socket = io(`${import.meta.env.VITE_API_URL}`, {
       auth: { token: localStorage.getItem("token") }
     });
 

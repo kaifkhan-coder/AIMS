@@ -20,7 +20,7 @@
 //     const fetchProfile = async () => {
 //       try {
 //         const res = await axios.get(
-//           "http://localhost:5000/api/users/profile",
+//           "${import.meta.env.VITE_API_URL}/api/users/profile",
 //           {
 //             headers: {
 //               Authorization: `Bearer ${storedToken}`,
@@ -91,7 +91,7 @@
 
 //     const fetchProfile = async () => {
 //       try {
-//         // const res = await api.get("http://localhost:5000/api/users/profile", {
+//         // const res = await api.get("${import.meta.env.VITE_API_URL}/api/users/profile", {
 //         //   headers: {
 //         //     Authorization: `Bearer ${storedToken}`,
 //         //   },

@@ -36,7 +36,7 @@ const handlePhotoUpload = async (e) => {
     }
 
     const res = await axios.post(
-      "http://localhost:5000/api/users/upload-photo",
+      "${import.meta.env.VITE_API_URL}/api/users/upload-photo",
       form,
       {
         headers: {
@@ -110,7 +110,7 @@ const handlePhotoUpload = async (e) => {
             whileHover={{ scale: 1.05 }}
             src={
               user?.profilePhoto
-                ? `http://localhost:5000${user.profilePhoto}?t=${Date.now()}`
+                ? `${import.meta.env.VITE_API_URL}${user.profilePhoto}?t=${Date.now()}`
                 : "/"
             }
             className="w-28 h-28 rounded-full object-cover border-4 border-indigo-500"
@@ -175,7 +175,7 @@ const handlePhotoUpload = async (e) => {
                 onClick={async () => {
                   try {
                     await axios.put(
-                      "http://localhost:5000/api/users/change-password",
+                      `${import.meta.env.VITE_API_URL}/api/users/change-password`,
                       { oldPassword: oldPass, newPassword: newPass },
                       { headers: { Authorization: `Bearer ${token}` } }
                     );

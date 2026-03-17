@@ -108,7 +108,8 @@
 
       try {
         const res = await axios.post(
-          "http://localhost:5000/api/ai/predict-priority",
+          `${import.meta.env.VITE_API_URL}/api/ai/predict-priority`,
+          // "${import.meta.env.VITE_API_URL}/api/ai/predict-priority",
           {
             title: title.trim(),
             description: description.trim(),
@@ -141,7 +142,7 @@
         setAiLoading(true);
 
         const res = await axios.post(
-          "http://localhost:5000/api/llm/suggest-description",
+          `${import.meta.env.VITE_API_URL}/api/llm/suggest-description`,
           { title: titleValue.trim() },
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -168,7 +169,7 @@
         setSuggestionLoading(true);
 
         const res = await axios.post(
-          "http://localhost:5000/api/incidents/solution-suggestions",
+          `${import.meta.env.VITE_API_URL}/api/incidents/solution-suggestion`,
           {
             title: title.trim(),
             description: description.trim(),
@@ -194,7 +195,8 @@
     const getRootCause = async () => {
 
   const res = await axios.post(
-    "http://localhost:5000/api/incidents/root-cause",
+    `${import.meta.env.VITE_API_URL}/api/incidents/root-cause`,
+    // "${import.meta.env.VITE_API_URL}/api/incidents/root-cause",
     {
       title,
       description
@@ -235,7 +237,7 @@
         }
 
         const res = await axios.post(
-          "http://localhost:5000/api/incidents",
+          `${import.meta.env.VITE_API_URL}/api/incidents`,
           formData,
           {
             headers: {
