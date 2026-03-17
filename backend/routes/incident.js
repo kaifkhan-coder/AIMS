@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import User from "../models/User.js";
 import Incident from "../models/incident.js";
 import Notification from "../models/notification.js";
-import KnowledgeBase from "../models/KnowledgeBase.js";
+import KnowledgeBase from "../models/knowledgeBase.js";
 import Feedback from "../models/feedback.js";
 import AuditLog from "../models/AuditLog.js";
 import {
