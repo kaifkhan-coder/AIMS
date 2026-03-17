@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API = `${import.meta.env.VITE_API_URL}`;
+const API = `${process.env.BACKEND_URL}`;
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState([]);

@@ -23,7 +23,7 @@ export default function VerifyOTP() {
     const fetchStatus = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/auth/otp-status/${email}`
+          `${process.env.BACKEND_URL}/api/auth/otp-status/${email}`
         );
 
         if (res.data.status !== "active") {
@@ -71,7 +71,7 @@ export default function VerifyOTP() {
 
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/auth/verify-otp`,
+        `${process.env.BACKEND_URL}/api/auth/verify-otp`,
         { email, otp: otp.toString().trim() }
       );
 
@@ -92,7 +92,7 @@ export default function VerifyOTP() {
   const resendOtp = async () => {
     try {
       await axios.post(
-        "${import.meta.env.VITE_API_URL}/api/auth/resend-otp",
+        "${process.env.BACKEND_URL}/api/auth/resend-otp",
         { email }
       );
       alert("OTP resent");

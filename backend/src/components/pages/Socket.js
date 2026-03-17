@@ -5,7 +5,7 @@ let socket = null;
 export const connectSocket = (token) => {
   if (!token) return;
 
-  socket = io("${import.meta.env.VITE_API_URL}", {
+  socket = io("${process.env.BACKEND_URL}", {
     transports: ["websocket"],
     auth: { token },
   });

@@ -29,7 +29,7 @@ export default function AdminFaceVerify() {
 
     try {
       const res = await axios.post(
-        "${import.meta.env.VITE_API_URL}/api/admin/verify-face",
+        "${process.env.BACKEND_URL}/api/admin/verify-face",
         { image },
         {
           headers: {

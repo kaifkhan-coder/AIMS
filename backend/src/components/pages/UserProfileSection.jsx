@@ -14,7 +14,7 @@ const UserProfileSection = () => {
   const handleUpdate = async () => {
     try {
       await axios.put(
-        "${import.meta.env.VITE_API_URL}/api/users/profile",
+        "${process.env.BACKEND_URL}/api/users/profile",
         form,
         { headers: { Authorization: `Bearer ${token}` } }
       );

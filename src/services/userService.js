@@ -3,7 +3,7 @@ import axios from "axios";
 export const createStaff = (data) => {
     const token = localStorage.getItem("token");
   return axios.post(
-    "${import.meta.env.VITE_API_URL}/api/admin/create-staff",
+    "${process.env.BACKEND_URL}/api/admin/create-staff",
     data,
     {
       headers: {
@@ -13,20 +13,20 @@ export const createStaff = (data) => {
   );
 };
 
-axios.get("${import.meta.env.VITE_API_URL}/api/dashboard/admin", {
+axios.get("${process.env.BACKEND_URL}/api/dashboard/admin", {
   headers: {
     Authorization: `Bearer ${token}`
   }
 });
 
-axios.get("${import.meta.env.VITE_API_URL}/api/dashboard/staff", {
+axios.get("${process.env.BACKEND_URL}/api/dashboard/staff", {
   headers: {
     Authorization: `Bearer ${token}`
   }
 });
 
 await axios.post(
-  "${import.meta.env.VITE_API_URL}/api/tickets",
+  "${process.env.BACKEND_URL}/api/tickets",
   formData,
   {
     headers: {
@@ -37,7 +37,7 @@ await axios.post(
 );
 
 await axios.post(
-    "${import.meta.env.VITE_API_URL}/api/tickets/my",
+    "${process.env.BACKEND_URL}/api/tickets/my",
     formData,
     {
       headers: {
@@ -49,7 +49,7 @@ await axios.post(
 
 export const getAssignedTickets = () => {
   const token = localStorage.getItem("token");
-  return axios.get("${import.meta.env.VITE_API_URL}/api/admin/tickets/assigned", {
+  return axios.get("${process.env.BACKEND_URL}/api/admin/tickets/assigned", {
     headers: {
       Authorization: `Bearer ${token}`
     }

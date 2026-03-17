@@ -1,5 +1,5 @@
 import axios from "axios";
-const API = "${import.meta.env.VITE_API_URL}/api/admin";
+const API = "${process.env.BACKEND_URL}/api/admin";
 
 export const createStaff = (data) => {
   // console.log("Creating staff with data:", data);
@@ -26,7 +26,7 @@ export const deleteStaff = (id) => {
   const token = localStorage.getItem("token");
 
   return axios.delete(
-    `${import.meta.env.VITE_API_URL}/api/admin/staff/${id}`,
+    `${process.env.BACKEND_URL}/api/admin/staff/${id}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -39,7 +39,7 @@ export const deleteStaff = (id) => {
 export const updateStaff = (id, data) => {
   const token = localStorage.getItem("token");
   return axios.put(
-    `${import.meta.env.VITE_API_URL}/api/admin/staff/${id}`,
+    `${process.env.BACKEND_URL}/api/admin/staff/${id}`,
     data,
     {
       headers: {
