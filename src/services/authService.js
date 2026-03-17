@@ -1,5 +1,5 @@
 import axios from "axios";
-const API = "${process.env.BACKEND_URL}/api/auth";
+const API = `${import.meta.env.VITE_API_URL}/api/auth`;
 
 export const registerUser = (data) =>
   axios.post(`${API}/register`, data);
