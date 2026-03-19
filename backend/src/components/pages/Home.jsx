@@ -142,7 +142,7 @@ const IsometricDashboard = () => {
           </div>
           <div>
             <div className="text-xs text-slate-400">System Status</div>
-            <div className="text-sm font-bold text-white">80.9% Uptime</div>
+            <div className="text-sm font-bold text-white">98.9% Uptime</div>
           </div>
         </motion.div>
 
