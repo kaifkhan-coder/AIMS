@@ -1,8 +1,8 @@
-import React, { useRef } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { 
-  ShieldCheck, Activity, Clock, ArrowRight, LogIn, UserPlus, CheckCircle2, AlertCircle, Users, Search, Bell
+  ShieldCheck, Activity, Clock, ArrowRight, LogIn, UserPlus, CheckCircle2, AlertCircle, Search, Bell
 } from "lucide-react";
 
 // --- Grid Background with animated blobs ---
@@ -22,34 +22,14 @@ const GridBackground = () => (
   </div>
 );
 
-// --- 3D Dashboard ---
-const IsometricDashboard = () => {
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  const handleMouseMove = (e) => {
-    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - left) / width - 0.5;
-    const y = (e.clientY - top) / height - 0.5;
-    mouseX.set(x);
-    mouseY.set(y);
-  };
-
-  const rotateX = useTransform(mouseY, [-0.5, 0.5], [15, -15]);
-  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-15, 15]);
-  const springConfig = { damping: 25, stiffness: 150 };
-  const springRotateX = useSpring(rotateX, springConfig);
-  const springRotateY = useSpring(rotateY, springConfig);
-
+// --- 2D Dashboard Mockup (3D removed) ---
+const DashboardMockup = () => {
   return (
-    <motion.div 
-      className="relative w-full h-[400px] md:h-[500px] flex items-center justify-center perspective-1000"
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => { mouseX.set(0); mouseY.set(0); }}
-      style={{ perspective: 1200 }}
-    >
+    <div className="relative w-full h-[400px] md:h-[500px] flex items-center justify-center">
       <motion.div
-        style={{ rotateX: springRotateX, rotateY: springRotateY, transformStyle: "preserve-3d" }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         className="relative w-[90%] md:w-[500px] aspect-[4/3] bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl shadow-blue-900/20"
       >
         {/* Dashboard Header */}
@@ -69,7 +49,7 @@ const IsometricDashboard = () => {
         <div className="p-4 grid grid-cols-12 gap-4 h-[calc(100%-3rem)]">
           {/* Sidebar */}
           <div className="col-span-3 flex flex-col gap-3 border-r border-slate-700/30 pr-2">
-            {[1,2,3,4].map(i => (
+            {[1, 2, 3, 4].map(i => (
               <motion.div 
                 key={i}
                 className="h-2 w-full bg-slate-700/30 rounded-full"
@@ -84,13 +64,13 @@ const IsometricDashboard = () => {
           <div className="col-span-9 flex flex-col gap-4">
             {/* Stats Row */}
             <div className="grid grid-cols-3 gap-3">
-              {[1,2,3].map(i => (
+              {[1, 2, 3].map(i => (
                 <motion.div 
                   key={i} 
                   className="h-16 bg-slate-800/50 rounded-lg border border-slate-700/30 p-2"
-                  initial={{ y: 20, z: 0 }}
-                  animate={{ y: 0, z: 20 }}
-                  transition={{ type: "spring", stiffness: 120, damping: 15, delay: i*0.2 }}
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 120, damping: 15, delay: i * 0.2 }}
                 >
                   <div className="w-6 h-6 bg-blue-500/20 rounded mb-2" />
                   <div className="w-12 h-2 bg-slate-600/30 rounded" />
@@ -101,12 +81,12 @@ const IsometricDashboard = () => {
             {/* Chart Area */}
             <div className="flex-1 bg-slate-800/30 rounded-lg border border-slate-700/30 relative overflow-hidden group">
               <div className="absolute bottom-0 left-0 right-0 h-[60%] flex items-end justify-around px-2 pb-2 gap-1">
-                {[40,70,50,90,60,80,45,70].map((h,i) => (
+                {[40, 70, 50, 90, 60, 80, 45, 70].map((h, i) => (
                   <motion.div 
                     key={i}
-                    initial={{ height: 0, z: 0 }}
-                    animate={{ height: `${h}%`, z: 20 }}
-                    transition={{ duration: 1, delay: 0.5 + i*0.1, type: "spring", stiffness: 100 }}
+                    initial={{ height: 0 }}
+                    animate={{ height: `${h}%` }}
+                    transition={{ duration: 1, delay: 0.5 + i * 0.1, type: "spring", stiffness: 100 }}
                     className="w-full bg-blue-500/20 rounded-t-sm group-hover:bg-blue-500/40 transition-colors"
                   />
                 ))}
@@ -117,10 +97,9 @@ const IsometricDashboard = () => {
 
         {/* Floating Alert Cards */}
         <motion.div 
-          style={{ transform: "translateZ(40px)" }}
-          animate={{ y: [0, -8, 0], rotateZ: [0, 2, -2, 0] }}
+          animate={{ y: [0, -8, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -right-6 -top-6 bg-slate-800 p-4 rounded-xl border border-slate-600 shadow-xl flex items-center gap-3"
+          className="absolute -right-6 -top-6 bg-slate-800 p-4 rounded-xl border border-slate-600 shadow-xl flex items-center gap-3 z-10"
         >
           <div className="p-2 bg-red-500/20 rounded-lg">
             <AlertCircle className="w-6 h-6 text-red-400" />
@@ -132,24 +111,24 @@ const IsometricDashboard = () => {
         </motion.div>
 
         <motion.div 
-          style={{ transform: "translateZ(20px)" }}
-          animate={{ y: [0, -5, 0], rotateZ: [0, 1, -1, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -left-4 bottom-10 bg-slate-800 p-3 rounded-xl border border-slate-600 shadow-xl flex items-center gap-3"
+          animate={{ y: [0, -5, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute -left-4 bottom-10 bg-slate-800 p-3 rounded-xl border border-slate-600 shadow-xl flex items-center gap-3 z-10"
         >
           <div className="p-2 bg-emerald-500/20 rounded-lg">
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
             <div className="text-xs text-slate-400">System Status</div>
-            <div className="text-sm font-bold text-white">80.9% Uptime</div>
+            <div className="text-sm font-bold text-white">98.9% Uptime</div>
           </div>
         </motion.div>
 
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
+
 // --- Main Page Component ---
 
 const containerVariants = {
@@ -229,64 +208,6 @@ export default function Home() {
             animate="visible"
             className="flex flex-col items-start text-left"
           >
-<motion.div variants={itemVariants} className="mt-8 flex items-center gap-4 text-sm text-slate-500">
-  <div className="flex -space-x-3">
-    {[
-      { name: "K", gradient: "from-blue-500 to-cyan-400", online: true },
-      { name: "A", gradient: "from-emerald-500 to-teal-400", online: true },
-      { name: "M", gradient: "from-purple-500 to-indigo-400", online: false },
-      { name: "S", gradient: "from-orange-500 to-amber-400", online: true },
-    ].map((u, i) => (
-      <motion.div
-        key={i}
-        initial={{ opacity: 0, y: 10, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ delay: 0.2 + i * 0.08, type: "spring", stiffness: 120, damping: 14 }}
-        className="relative"
-      >
-        {/* Avatar */}
-        <motion.div
-          animate={{
-            y: [0, -4, 0],
-            scale: [1, 1.03, 1],
-          }}
-          transition={{
-            duration: 2.8,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: i * 0.2,
-          }}
-          whileHover={{ scale: 1.08, y: -6 }}
-          className="w-10 h-10 rounded-full border-2 border-slate-950 shadow-lg shadow-blue-500/10 overflow-hidden"
-        >
-          <div className={`w-full h-full bg-gradient-to-br ${u.gradient} flex items-center justify-center`}>
-            <span className="text-white font-bold text-sm">{u.name}</span>
-          </div>
-        </motion.div>
-
-        {/* Glow ring (animated) */}
-        <motion.div
-          className="absolute inset-0 rounded-full ring-2 ring-blue-500/20 pointer-events-none"
-          animate={{ opacity: [0.15, 0.35, 0.15] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.25 }}
-        />
-
-        {/* Online dot */}
-        {u.online && (
-          <motion.div
-            className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-950"
-            animate={{ scale: [1, 1.25, 1] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
-          />
-        )}
-      </motion.div>
-    ))}
-  </div>
-
-  <p>Developed by Student of Information Technology final year students</p>
-</motion.div>
-
-
             <motion.h1 
               variants={itemVariants}
               className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.1]"
@@ -332,26 +253,71 @@ export default function Home() {
               </Link>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="mt-8 flex items-center gap-4 text-sm text-slate-500">
-              <div className="flex -space-x-2">
-                {[1,2,3].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-950 flex items-center justify-center text-xs font-bold text-slate-400">
-                    <Users className="w-3 h-3" />
-                  </div>
+            <motion.div variants={itemVariants} className="mt-10 flex items-center gap-4 text-sm text-slate-500">
+              <div className="flex -space-x-3">
+                {[
+                  { name: "K", gradient: "from-blue-500 to-cyan-400", online: true },
+                  { name: "A", gradient: "from-emerald-500 to-teal-400", online: true },
+                  { name: "M", gradient: "from-purple-500 to-indigo-400", online: false },
+                  { name: "S", gradient: "from-orange-500 to-amber-400", online: true },
+                ].map((u, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ delay: 0.2 + i * 0.08, type: "spring", stiffness: 120, damping: 14 }}
+                    className="relative"
+                  >
+                    {/* Avatar */}
+                    <motion.div
+                      animate={{
+                        y: [0, -4, 0],
+                        scale: [1, 1.03, 1],
+                      }}
+                      transition={{
+                        duration: 2.8,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: i * 0.2,
+                      }}
+                      whileHover={{ scale: 1.08, y: -6 }}
+                      className="w-10 h-10 rounded-full border-2 border-slate-950 shadow-lg shadow-blue-500/10 overflow-hidden"
+                    >
+                      <div className={`w-full h-full bg-gradient-to-br ${u.gradient} flex items-center justify-center`}>
+                        <span className="text-white font-bold text-sm">{u.name}</span>
+                      </div>
+                    </motion.div>
+
+                    {/* Glow ring (animated) */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full ring-2 ring-blue-500/20 pointer-events-none"
+                      animate={{ opacity: [0.15, 0.35, 0.15] }}
+                      transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut", delay: i * 0.25 }}
+                    />
+
+                    {/* Online dot */}
+                    {u.online && (
+                      <motion.div
+                        className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-slate-950"
+                        animate={{ scale: [1, 1.25, 1] }}
+                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 }}
+                      />
+                    )}
+                  </motion.div>
                 ))}
               </div>
-              <p>Developed by Student of Information Technology final year students</p>
+              <p>Developed by Information Technology final year students</p>
             </motion.div>
           </motion.div>
 
-          {/* Right: 3D Visual */}
+          {/* Right: 2D Visual Mockup */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="relative hidden lg:block"
           >
-             <IsometricDashboard />
+             <DashboardMockup />
           </motion.div>
         </div>
 
@@ -432,7 +398,7 @@ export default function Home() {
           <p className="text-slate-600 text-sm">
             © {new Date().getFullYear()} Automated Incident Management System.
           </p>
-          <p className="text-slate-500 text-sm">Developed by Khan Mohammed Kaif.</p>
+          <p className="text-slate-500 text-sm mt-2">Developed by Khan Mohammed Kaif.</p>
         </motion.footer>
       </div>
     </div>
