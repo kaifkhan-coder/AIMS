@@ -80,6 +80,7 @@ const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
   setServerError("");
+  setValidationErrors({});
 
   const result = loginSchema.safeParse(form);
 
@@ -233,28 +234,40 @@ useEffect(() => {
               </AnimatePresence>
 
               {/* Username */}
-              <input
-                name="username"
-                value={form.username}
-                onChange={handleChange}
-                placeholder="Username"
-                className="w-full p-3 rounded-xl bg-slate-950/50 border border-white/10 text-white"
-              />
-              {validationErrors.username && (
-  <p className="text-red-400 text-sm mt-1">{validationErrors.username}</p>
-)}
+<div>
+  <input
+    name="username"
+    value={form.username}
+    onChange={handleChange}
+    placeholder="Username"
+    className={`w-full p-3 rounded-xl bg-slate-950/50 border text-white outline-none transition ${
+      validationErrors.username
+        ? "border-red-500 focus:border-red-500"
+        : "border-white/10 focus:border-blue-500"
+    }`}
+  />
+  {validationErrors.username && (
+    <p className="text-red-400 text-sm mt-1">{validationErrors.username}</p>
+  )}
+</div>
               {/* Password */}
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full p-3 rounded-xl bg-slate-950/50 border border-white/10 text-white"
-              />
-{validationErrors.password && (
-  <p className="text-red-400 text-sm mt-1">{validationErrors.password}</p>
-)}
+<div>
+  <input
+    type="password"
+    name="password"
+    value={form.password}
+    onChange={handleChange}
+    placeholder="••••••••"
+    className={`w-full p-3 rounded-xl bg-slate-950/50 border text-white outline-none transition ${
+      validationErrors.password
+        ? "border-red-500 focus:border-red-500"
+        : "border-white/10 focus:border-blue-500"
+    }`}
+  />
+  {validationErrors.password && (
+    <p className="text-red-400 text-sm mt-1">{validationErrors.password}</p>
+  )}
+</div>
 
 <motion.button
   whileHover={{ scale: loading || lockTimeLeft > 0 ? 1 : 1.02 }}
