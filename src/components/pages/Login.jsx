@@ -86,9 +86,13 @@ const handleSubmit = async (e) => {
 
   if (!result.success) {
     const errors = {};
+
     result.error.issues.forEach((err) => {
-      if (err.path[0]) errors[err.path[0]] = err.message;
+      if (err.path[0]) {
+        errors[err.path[0]] = err.message;
+      }
     });
+
     setValidationErrors(errors);
     setLoading(false);
     return;
@@ -135,7 +139,6 @@ const handleSubmit = async (e) => {
         );
         setLockTimeLeft(seconds);
       }
-
       return;
     }
 
