@@ -86,7 +86,7 @@ const handleSubmit = async (e) => {
 
   if (!result.success) {
     const errors = {};
-    result.error.errors.forEach((err) => {
+    result.error.issues.forEach((err) => {
       if (err.path[0]) errors[err.path[0]] = err.message;
     });
     setValidationErrors(errors);
@@ -270,6 +270,7 @@ useEffect(() => {
 </div>
 
 <motion.button
+type="submit"
   whileHover={{ scale: loading || lockTimeLeft > 0 ? 1 : 1.02 }}
   whileTap={{ scale: loading || lockTimeLeft > 0 ? 1 : 0.98 }}
   disabled={loading || lockTimeLeft > 0}
