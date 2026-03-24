@@ -134,6 +134,14 @@ const userSchema = new mongoose.Schema(
         trim: true,
       },
     ],
+failedLoginAttempts: {
+  type: Number,
+  default: 0,
+},
+loginLockUntil: {
+  type: Date,
+  default: null,
+},
   },
   { timestamps: true }
 );

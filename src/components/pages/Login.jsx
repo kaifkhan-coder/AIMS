@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { z } from "zod";
@@ -44,7 +44,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
   const [validationErrors, setValidationErrors] = useState({});
-
+  const [lockTimeLeft, setLockTimeLeft] = useState(0);
   /* 3D Tilt Logic */
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -68,11 +68,11 @@ export default function Login() {
   };
 
   /* Handlers */
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setServerError("");
-    setValidationErrors({});
-  };
+const handleChange = (e) => {
+  setForm({ ...form, [e.target.name]: e.target.value });
+  setServerError("");
+  setValidationErrors({});
+};
 
   // localStorage.clear();
   
@@ -82,6 +82,7 @@ const handleSubmit = async (e) => {
   setServerError("");
 
   const result = loginSchema.safeParse(form);
+
   if (!result.success) {
     const errors = {};
     result.error.errors.forEach((err) => {
@@ -96,15 +97,13 @@ const handleSubmit = async (e) => {
     const res = await loginUser(form);
     console.log("Login response:", res.data);
 
-    // ✅ Admin 2FA only
     if (res.data?.twoFactorRequired) {
       navigate("/verify-otp-admin", {
-        state: { userId: res.data.userId, email: res.data.email }
+        state: { userId: res.data.userId, email: res.data.email },
       });
       return;
     }
 
-    // ✅ Normal login
     if (res.data.token && res.data.user) {
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", res.data.user.role);
@@ -119,36 +118,64 @@ const handleSubmit = async (e) => {
       else if (role === "super_admin") navigate("/super-dashboard");
       else navigate("/user");
     }
-
   } catch (err) {
     console.log("LOGIN ERROR:", err?.response?.data || err);
 
     const data = err?.response?.data;
     const status = err?.response?.status;
 
-    // ✅ Only go to staff OTP page when backend explicitly says so
+    if (status === 403 && data?.loginLocked) {
+      setServerError(data.message);
+
+      if (data?.lockUntil) {
+        const seconds = Math.max(
+          0,
+          Math.ceil((new Date(data.lockUntil) - new Date()) / 1000)
+        );
+        setLockTimeLeft(seconds);
+      }
+
+      return;
+    }
+
     if (status === 403 && data?.needsStaffOTP) {
       navigate("/verify-otp", {
-        state: { email: data.email || form.username }
+        state: { email: data.email || form.username },
       });
       return;
     }
 
-    // ✅ Blocked / deactivated user should stay on login page
     if (status === 403 && data?.message === "Account deactivated") {
       setServerError(`Account blocked: ${data.reason || "No reason provided"}`);
       return;
     }
 
     if (status === 401) {
-      setServerError("Invalid username or password");
-    } else {
-      setServerError(data?.message || "Server error. Try again later.");
+      setServerError(data?.message || "Invalid username or password");
+      return;
     }
+
+    setServerError(data?.message || "Server error. Try again later.");
   } finally {
     setLoading(false);
   }
-}; 
+};
+useEffect(() => {
+  if (lockTimeLeft <= 0) return;
+
+  const timer = setInterval(() => {
+    setLockTimeLeft((prev) => {
+      if (prev <= 1) {
+        clearInterval(timer);
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [lockTimeLeft]);
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#0f172a] overflow-hidden relative perspective-1000">
 
@@ -213,7 +240,9 @@ const handleSubmit = async (e) => {
                 placeholder="Username"
                 className="w-full p-3 rounded-xl bg-slate-950/50 border border-white/10 text-white"
               />
-
+              {validationErrors.username && (
+  <p className="text-red-400 text-sm mt-1">{validationErrors.username}</p>
+)}
               {/* Password */}
               <input
                 type="password"
@@ -223,15 +252,24 @@ const handleSubmit = async (e) => {
                 placeholder="••••••••"
                 className="w-full p-3 rounded-xl bg-slate-950/50 border border-white/10 text-white"
               />
+{validationErrors.password && (
+  <p className="text-red-400 text-sm mt-1">{validationErrors.password}</p>
+)}
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl"
-              >
-                {loading ? <Loader2 className="animate-spin mx-auto" /> : "Sign In"}
-              </motion.button>
+<motion.button
+  whileHover={{ scale: loading || lockTimeLeft > 0 ? 1 : 1.02 }}
+  whileTap={{ scale: loading || lockTimeLeft > 0 ? 1 : 0.98 }}
+  disabled={loading || lockTimeLeft > 0}
+  className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  {loading ? (
+    <Loader2 className="animate-spin mx-auto" />
+  ) : lockTimeLeft > 0 ? (
+    `Try again in ${lockTimeLeft}s`
+  ) : (
+    "Sign In"
+  )}
+</motion.button>
               {/* <p className="text-center text-slate-400 mt-6">Or login with</p> */}
 
               {/* <div className="flex flex-col gap-3 mt-4">

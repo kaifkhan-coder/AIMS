@@ -444,7 +444,7 @@ router.post("/register", async (req, res) => {
     console.error("REGISTER ERROR:", err);
     res.status(500).json({ message: "Registration failed" });
   }
-});
+}); 
 
 /* ---------------- ME ---------------- */
 router.get("/me", protect, (req, res) => {
@@ -541,10 +541,57 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+    // ✅ Check if login is temporarily locked
+    if (user.loginLockUntil && user.loginLockUntil > new Date()) {
+      const remainingMs = new Date(user.loginLockUntil) - new Date();
+      const remainingSeconds = Math.ceil(remainingMs / 1000);
+
+      return res.status(403).json({
+        message: `Too many failed login attempts. Try again in ${remainingSeconds} seconds.`,
+        loginLocked: true,
+        lockUntil: user.loginLockUntil,
+      });
     }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+if (!isMatch) {
+  user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+
+  if (user.failedLoginAttempts >= 5) {
+    user.loginLockUntil = new Date(Date.now() + 2 * 60 * 1000);
+
+    console.log("LOCKING USER:", {
+      username: user.username,
+      attempts: user.failedLoginAttempts,
+      lockUntil: user.loginLockUntil,
+    });
+
+    await user.save();
+
+    return res.status(403).json({
+      message: "Too many failed login attempts. Account locked for 2 minutes.",
+      loginLocked: true,
+      lockUntil: user.loginLockUntil,
+    });
+  }
+
+  console.log("FAILED LOGIN:", {
+    username: user.username,
+    attempts: user.failedLoginAttempts,
+  });
+
+  await user.save();
+
+  return res.status(401).json({
+    message: `Invalid credentials. Attempts left: ${5 - user.failedLoginAttempts}`,
+  });
+}
+
+    // ✅ Reset attempts after successful password
+    user.failedLoginAttempts = 0;
+    user.loginLockUntil = null;
+    await user.save();
 
     if (user.isActive === false) {
       return res.status(403).json({

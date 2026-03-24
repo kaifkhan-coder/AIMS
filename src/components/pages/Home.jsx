@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { 
   ShieldCheck, Activity, Clock, ArrowRight, LogIn, UserPlus, CheckCircle2, AlertCircle, Search, Bell
 } from "lucide-react";
-
+import LiveSystemStatus from "./LiveSystemStatus.jsx";
 // --- Grid Background with animated blobs ---
 const GridBackground = () => (
   <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -115,13 +115,7 @@ const DashboardMockup = () => {
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           className="absolute -left-4 bottom-10 bg-slate-800 p-3 rounded-xl border border-slate-600 shadow-xl flex items-center gap-3 z-10"
         >
-          <div className="p-2 bg-emerald-500/20 rounded-lg">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-          </div>
-          <div>
-            <div className="text-xs text-slate-400">System Status</div>
-            <div className="text-sm font-bold text-white">98.9% Uptime</div>
-          </div>
+            <LiveSystemStatus/>
         </motion.div>
 
       </motion.div>

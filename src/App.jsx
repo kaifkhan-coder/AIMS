@@ -20,6 +20,8 @@ import AdminRoute from "./components/pages/AdminRoutes.jsx";
 import VerifyOTPAdmin from "./components/pages/VerifyOTPAdmin.jsx";
 import AdminFaceVerify from "./components/pages/AdminFaceVerify.jsx";
 import SuperAdminDashboard from "./components/pages/SuperAdminDashboard.jsx";
+// import LiveSystemStatus from "./components/pages/Live SystemStatus.jsx";
+import LiveSystemStatus from "./components/pages/LiveSystemStatus.jsx";
 
 function App() {
   const { loading } = useAuth();
@@ -83,7 +85,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route path="/system-status" element={<LiveSystemStatus />} />
         {/* <Route path="/admin-face-verify" element={<AdminFaceVerify />} /> */}
 
         <Route

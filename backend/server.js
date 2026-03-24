@@ -29,6 +29,7 @@ import userRoutes from "./routes/UserRoutes.js";
 import llmRoutes from "./routes/llm.js";
 import bootstrapRoutes from "./routes/bootstrap.js";
 import superadminRoutes from "./routes/superadminRoutes.js";
+import statusRoutes from "./routes/statusRoutes.js";
 
 import User from "./models/User.js";
 // import { checkSlaBreach } from "./services/slaWatcher.js";
@@ -152,9 +153,8 @@ io.on("connection", (socket) => {
   });
 });
 
+
 // 2️⃣ Connection handler AFTER middleware
-
-
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -274,6 +274,8 @@ app.use("/api/llm", llmRoutes);
 app.use("/api/bootstrap", bootstrapRoutes);
 app.use("/api/account-appeals", accountAppealRoutes);
 app.use("/api/superadmin", superadminRoutes);
+app.use("/api/status", statusRoutes);
+
 /* ---------------- SLA WATCHER ---------------- */
 setInterval(() => {
   runSlaPredictor(io);
