@@ -189,7 +189,6 @@ function App() {
           <Route path="/verify-otp" element={<VerifyOTP />} />
           <Route path="/verify-otp-admin" element={<VerifyOTPAdmin />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
-          <Route path="/verify/:staffId" element={<VerifyStaff />} />
           <Route path="/verify/:staffId" element={<VerifyStaffPage />} />
           <Route path="/resolve-ticket/:id" element={<ResolveTicket />} />
           {/* Super Admin */}
