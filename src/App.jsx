@@ -139,7 +139,6 @@ const VerifyOTPAdmin = lazy(() => import("./components/pages/VerifyOTPAdmin.jsx"
 const SuperAdminDashboard = lazy(() => import("./components/pages/SuperAdminDashboard.jsx"));
 const LiveSystemStatus = lazy(() => import("./components/pages/LiveSystemStatus.jsx"));
 const SkeletonPage = lazy(() => import("./components/SkeletonPage.jsx"));
-const VerifyStaff = lazy(() => import("./components/pages/verifyStaff.jsx"));
 const VerifyStaffPage = lazy(() => import("./components/pages/VerifyStaffPage.jsx"));
 const ResolveTicket = lazy(() => import("./components/pages/ResolveTicket.jsx"));
 function App() {

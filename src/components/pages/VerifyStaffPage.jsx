@@ -14,7 +14,7 @@ export default function VerifyStaffPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-center max-w-md w-full">
+      <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800 te   xt-center max-w-md w-full">
         {!data ? (
           <p className="text-white">Verifying...</p>
         ) : data.error ? (
