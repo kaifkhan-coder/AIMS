@@ -185,19 +185,23 @@ router.get("/all", protect, async (req, res) => {
 router.get("/verify/:staffId", async (req, res) => {
   const { staffId } = req.params;
 
-  const ticket = await Incident.findOneAndUpdate(
-    { assignedTo: staffId, status: "In Progress" },
-    { status: "Resolved", verified: true, resolvedAt: new Date() },
-    { new: true }
-  );
+  try {
+    const staff = await User.findById(staffId).select("full_name department email");
+    
+    const ticket = await Incident.findOneAndUpdate(
+      { assignedTo: staffId, status: "In Progress" },
+      { status: "Resolved", verified: true, resolvedAt: new Date() },
+      { new: true }
+    );
 
-  const staff = await User.findById(staffId).select("full_name department email");
-
-  res.json({ 
-    message: "Verified",
-    staff,
-    ticket
-  });
+    res.json({ 
+      message: "Verified",
+      staff,
+      ticket
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
 });
 /* ===============================
    ✅ RESEND OTP
