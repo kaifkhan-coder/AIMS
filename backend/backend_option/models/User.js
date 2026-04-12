@@ -12,14 +12,6 @@ const userSchema = new mongoose.Schema(
         return !this.googleId && !this.githubId;
       },
     },
-    googleId: {
-      type: String,
-      default: null,
-    },
-    githubId: {
-      type: String,
-      default: null,
-    },
     username: {
       type: String,
       required: true,
@@ -103,6 +95,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    qrCode: {
+      type: String,
+      default: null,
+    },
     blockReason: {
       type: String,
       default: "",
@@ -135,6 +131,7 @@ const userSchema = new mongoose.Schema(
       },
     ],
   },
+  
   { timestamps: true }
 );
 export default mongoose.model("User", userSchema);

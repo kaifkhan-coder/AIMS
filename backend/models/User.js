@@ -142,6 +142,7 @@ loginLockUntil: {
   type: Date,
   default: null,
 },
+qrCode: String, // New field for QR code data URL
   },
   { timestamps: true }
 );

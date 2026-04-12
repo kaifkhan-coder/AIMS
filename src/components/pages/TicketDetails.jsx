@@ -73,7 +73,19 @@ export default function TicketDetails({ ticketId, onStatusChange }) {
           </div>
         )}
       </div>
-
+{ticket?.attachment && (
+  <div className="mt-4">
+    <p className="text-sm text-slate-400 mb-1">Attachment</p>
+    <a
+      href={`${import.meta.env.VITE_API_URL}/api/incidents/attachment/${ticket.attachment}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-400 hover:text-blue-300 underline"
+    >
+      View File
+    </a>
+  </div>
+)}
       <div className="space-y-3 rounded-2xl border border-blue-100 bg-blue-50 p-4">
         <h3 className="text-base font-semibold text-blue-700">Add Comment</h3>
 

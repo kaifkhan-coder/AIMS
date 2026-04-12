@@ -1432,7 +1432,7 @@ export const createIncident = async (req, res) => {
       priority,
       department,
       createdBy: req.user._id,
-      attachment: req.file?.filename || null,
+      attachment: req.file ? req.file?.filename : null,
       status: INCIDENT_STATUS.OPEN,
       normalizedText,
       fingerprint,

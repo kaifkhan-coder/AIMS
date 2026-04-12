@@ -264,7 +264,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/incidents", incidentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use("/uploads", express.static("uploads"));
 app.use("/api/tickets", ticketRoutes);  
 app.use("/api/notifications", notificationRoutes)
 app.use("/api/ai", aiRoutes);
@@ -275,7 +276,20 @@ app.use("/api/bootstrap", bootstrapRoutes);
 app.use("/api/account-appeals", accountAppealRoutes);
 app.use("/api/superadmin", superadminRoutes);
 app.use("/api/status", statusRoutes);
+app.use((err, req, res, next) => {
+  if (err.name === "MulterError") {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ message: "File too large. Max size is 5MB." });
+    }
+    return res.status(400).json({ message: err.message });
+  }
 
+  if (err) {
+    return res.status(400).json({ message: err.message || "Upload failed" });
+  }
+
+  next();
+});
 /* ---------------- SLA WATCHER ---------------- */
 setInterval(() => {
   runSlaPredictor(io);

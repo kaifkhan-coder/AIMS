@@ -21,7 +21,7 @@ router.post("/create-staff", protect, adminOnly, createStaff);
 router.get("/staff", protect, adminOnly, async (req, res) => {
   try {
     const staff = await User.find({ role: "staff" })
-      .select("full_name email department isVerified isActive");
+      .select("full_name email department isVerified isActive qrCode");
 
     res.json(staff);
   } catch (err) {
@@ -85,8 +85,7 @@ router.get("/audit-logs", protect, adminOnly, async (req, res) => {
   }
 });
 
-router.put
-("/reassign-staff/:id", protect, adminOnly, reassignStaffDepartment);
+router.put("/reassign-staff/:id", protect, adminOnly, reassignStaffDepartment);
 
 router.put("/tickets/:id/department", protect, adminOnly, reassignTicketDepartment);
 
@@ -132,7 +131,6 @@ router.get("/assigned", protect, async (req, res) => {
     return res.status(500).json({ message: "Failed to load assigned tickets" });
   }
 });
-
 
 router.put(
   "/tickets/:id/department",
@@ -184,6 +182,16 @@ router.get("/all", protect, async (req, res) => {
   res.json(tickets);
 });
 
+router.get("/verify/:staffId", async (req, res) => {
+  const { staffId } = req.params;
+
+  await Incident.findOneAndUpdate(
+    { assignedTo: staffId, status: "In Progress" },
+    { status: "Resolved", verified: true }
+  );
+
+  res.send("✅ Verified Successfully");
+});
 /* ===============================
    ✅ RESEND OTP
 ================================ */

@@ -8,6 +8,7 @@ import openai, { classifyIncident }
 from "../llmService.js";
 import { protect, roleCheck } from "../middleware/autMiddleware.js";
 import AuditLog from "../models/AuditLog.js";
+import QRCode from "qrcode";
 export const getAllIncidentsForAdmin = [
   protect,
   roleCheck("admin"),
@@ -109,7 +110,6 @@ export const getAssignedTickets = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 /* ===============================
    CREATE INCIDENT (WITH LLM)
 ================================ */
@@ -189,17 +189,17 @@ export const createStaff = async (req, res) => {
     const hashedOtp = await bcrypt.hash(otp, 10);
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await User.create({
-      full_name,
-      email,
-      username: username.toLowerCase(),
-      password: hashedPassword,
-      department,
-      role: "staff",
-      isVerified: false,
-      otp: hashedOtp,
-      otpExpires: Date.now() + 10 * 60 * 1000
-    });
+    // await User.create({
+    //   full_name,
+    //   email,
+    //   username: username.toLowerCase(),
+    //   password: hashedPassword,
+    //   department,
+    //   role: "staff",
+    //   isVerified: false,
+    //   otp: hashedOtp,
+    //   otpExpires: Date.now() + 10 * 60 * 1000
+    // });
 
     await sendEmail(
       email,
@@ -228,9 +228,21 @@ await AuditLog.create({
     department: newStaff.department,
   },
 });
+// ✅ Generate QR URL
+const qrData = `${process.env.FRONTEND_URL}/verify/${newStaff._id}`;
 
-    console.log(`Staff created: ${username}`);
-    res.status(201).json({ message: "Staff created. OTP sent." });
+console.log("QR DATA:", qrData); // DEBUG
+
+// ✅ Generate QR Image
+const qrCode = await QRCode.toDataURL(qrData);
+
+// ✅ Save QR in DB
+newStaff.qrCode = qrCode;
+await newStaff.save();
+res.status(201).json({
+  message: "Staff created",
+  staff: newStaff
+});
 
   } catch (err) {
     console.error("CREATE STAFF ERROR:", err);
@@ -435,30 +447,37 @@ export const getIncidentByDepartment = async (req, res) => {
 };
 
 export const getAvgResolutionTime = async (req, res) => {
-  const data = await Incident.aggregate([
-    {
-      $match: {
-        status: "Resolved",
-        resolvedAt: { $exists: true }
-      }
-    },
-    {
-      $project: {
-        diff: {
-          $divide: [
-            { $subtract: ["$resolvedAt", "$createdAt"] },
-            1000 * 60 // minutes
-          ]
+  try {
+    const data = await Incident.aggregate([
+      {
+        $match: {
+          status: { $in: ["Resolved", "Closed"] },
+          createdAt: { $exists: true },
+          // resolvedAt: { $exists: true, $ne: null }
+          resolvedAt: new Date() // Exclude null/undefined resolvedAt
+        }
+      },
+      {
+        $project: {
+          diff: {
+            $divide: [
+              { $subtract: ["$resolvedAt", "$createdAt"] },
+              1000 * 60
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          avgTime: { $avg: "$diff" }
         }
       }
-    },
-    {
-      $group: {
-        _id: null,
-        avgTime: { $avg: "$diff" }
-      }
-    }
-  ]);
+    ]);
 
-  res.json({ avgMinutes: Math.round(data[0]?.avgTime || 0) });
+    res.json({ avgMinutes: Math.round(data[0]?.avgTime || 0) });
+  } catch (err) {
+    console.error("AVG RESOLUTION ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 };

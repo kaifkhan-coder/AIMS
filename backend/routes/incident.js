@@ -52,6 +52,25 @@ const upload = multer({ storage });
 /* ===============================
    ASSIGNED TICKETS
 ================================ */
+router.get("/attachment/:filename", protect, async (req, res) => {
+  try {
+    if (!["admin", "staff", "super_admin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const filePath = path.join(process.cwd(), "uploads", req.params.filename);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    return res.sendFile(filePath);
+  } catch (err) {
+    console.error("ATTACHMENT ACCESS ERROR:", err);
+    return res.status(500).json({ message: "Failed to open file" });
+  }
+});
+
 router.get("/assigned", protect, async (req, res) => {
   try {
     const staffId = req.user?._id || req.user?.id;

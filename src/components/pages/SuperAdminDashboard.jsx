@@ -1021,6 +1021,8 @@ export default function SuperAdminDashboard() {
                             <th className="px-6 py-4">Dept</th>
                             <th className="px-6 py-4">Priority</th>
                             <th className="px-6 py-4">Status</th>
+                            <th className="px-6 py-4">Attachment</th>
+
                             <th className="px-6 py-4">SLA Status</th>
                           </tr>
                         </thead>
@@ -1040,6 +1042,21 @@ export default function SuperAdminDashboard() {
                                   {t.status}
                                 </span>
                               </td>
+                              <td className="px-6 py-4">
+  {t.attachment?.filename ? (
+    <a
+      href={`${import.meta.env.VITE_API_URL}/api/incidents/attachment/${t.attachment.filename}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-400 hover:text-blue-300 underline text-xs"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {t.attachment.originalName || "View File"}
+    </a>
+  ) : (
+    <span className="text-slate-500 text-xs">No File</span>
+  )}
+</td>
                               <td className="px-6 py-4">
                                 {isSlaBreached(t) ? (
                                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">

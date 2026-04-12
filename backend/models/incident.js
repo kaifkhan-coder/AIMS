@@ -122,11 +122,12 @@ const incidentSchema = new mongoose.Schema(
       default: null,
     },
 
-    attachment: {
-      type: String,
-      default: null,
-    },
-
+attachment: {
+  filename: { type: String, default: null },
+  originalName: { type: String, default: null },
+  mimeType: { type: String, default: null },
+  size: { type: Number, default: 0 },
+},
     reopenCount: {
       type: Number,
       default: 0,

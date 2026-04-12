@@ -21,8 +21,11 @@ router.post("/create-staff", protect, adminOnly, createStaff);
 router.get("/staff", protect, adminOnly, async (req, res) => {
   try {
     const staff = await User.find({ role: "staff" })
-      .select("full_name email department isVerified isActive");
+      .select("full_name email department isVerified isActive qrCode");
 
+    console.log("STAFF COUNT:", staff.length);
+    console.log("FIRST STAFF QR:", staff[0]?.qrCode?.substring(0, 30));
+    console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
     res.json(staff);
   } catch (err) {
     console.error("FETCH STAFF ERROR:", err);
@@ -34,7 +37,8 @@ router.get("/staff", protect, adminOnly, async (req, res) => {
 // router.post("/staff/verify-otp", verifyOtpWithToken);
 
 router.put("/staff/:id/deactivate", protect, adminOnly, async (req,res)=>{
-  const u = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+  const staff = await User.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+  
   await AuditLog.create({
   action: "STAFF_DEACTIVATED",
   updatedBy: req.user._id,
@@ -45,10 +49,10 @@ router.put("/staff/:id/deactivate", protect, adminOnly, async (req,res)=>{
   },
 });
   
-  res.json(u);
+  res.json(staff);
 });
 router.put("/staff/:id/activate", protect, adminOnly, async (req,res)=>{
-  const u = await User.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
+  const staff = await User.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
   await AuditLog.create({
   action: "STAFF_ACTIVATED",
   updatedBy: req.user._id,
@@ -58,7 +62,36 @@ router.put("/staff/:id/activate", protect, adminOnly, async (req,res)=>{
     email: staff.email,
   },
 });
-  res.json(u);
+  res.json(staff);
+});
+
+router.get("/verify/:staffId", async (req, res) => {
+  const { staffId } = req.params;
+
+  await Incident.findOneAndUpdate(
+    { assignedTo: staffId, status: "In Progress" },
+    { status: "Resolved", verified: true, resolvedAt: new Date() }
+  );
+
+  res.send("✅ Verified Successfully");
+});
+
+router.get("/test-qr", protect, adminOnly, async (req, res) => {
+  try {
+    const staff = await User.find({ role: "staff" });
+    console.log("TOTAL STAFF:", staff.length);
+    console.log("SAMPLE STAFF:", staff[0]);
+    console.log("FRONTEND_URL:", process.env.FRONTEND_URL);
+    
+    res.json({
+      totalStaff: staff.length,
+      sampleId: staff[0]?._id,
+      qrCodeExists: !!staff[0]?.qrCode,
+      frontendUrl: process.env.FRONTEND_URL
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 router.get("/stats/staff-workload", protect, adminOnly, async (req, res) => {
@@ -87,8 +120,6 @@ router.get("/audit-logs", protect, adminOnly, async (req, res) => {
 
 router.put
 ("/reassign-staff/:id", protect, adminOnly, reassignStaffDepartment);
-
-router.put("/tickets/:id/department", protect, adminOnly, reassignTicketDepartment);
 
 router.get("/stats", protect, adminOnly, getAdminStats);  
 
@@ -217,4 +248,54 @@ router.post("/resend-otp", async (req, res) => {
   }
 });
 
+router.put("/staff/:id", protect, adminOnly, async (req, res) => {
+  try {
+    const { full_name, department } = req.body; 
+    const staff = await User.findById(req.params.id);
+    if (!staff || staff.role !== "staff") {
+      return res.status(404).json({ message: "Staff not found" });
+    }
+    staff.full_name = full_name || staff.full_name;
+    // staff.email = email || staff.email;
+    staff.department = department || staff.department;
+    await staff.save();
+    res.json({ message: "Staff updated successfully", staff });
+  } catch (err) {
+    console.error("UPDATE STAFF ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.get("/all", protect, async (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Admins only" });
+  }
+  
+  const tickets = await Incident.find()
+    .populate("createdBy", "username email");
+  res.json(tickets);
+});
+
+import QRCode from "qrcode";
+
+router.get("/fix-all-qr", async (req, res) => {
+  try {
+    const staffList = await User.find({ role: "staff" });
+    console.log("Found staff:", staffList.length);
+    
+    for (const s of staffList) {
+      const qrData = `http://localhost:5173/verify/${s._id}`;
+      s.qrCode = await QRCode.toDataURL(qrData);
+      await s.save();
+      console.log("QR saved for:", s.full_name);
+    }
+    
+    res.json({ message: "Done", count: staffList.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;
+

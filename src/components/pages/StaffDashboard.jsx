@@ -124,7 +124,7 @@ const updateStatus = async (id, status) => {
     const token = localStorage.getItem("token");
 
     const res = await axios.put(
-      `${import.meta.env.VITE_API_URL}.api/incidents/${id}//status`,
+      `${import.meta.env.VITE_API_URL}/api/incidents/${id}/status`,
       // `${import.meta.env.VITE_API_URL}/api/incidents/${id}/status`,
       { status },
       {
@@ -462,42 +462,6 @@ const updateStatus = async (id, status) => {
                     </div>
                   </div>
                 </div>
-
-                {/* Card Footer Actions */}
-                {/* <div className="p-4 bg-slate-950/30 border-t border-white/5 grid grid-cols-2 gap-2">
-{ticket.status === "In Progress" && (
-  <button
-    onClick={() => updateStatus(ticket._id, "Resolved")}
-    className="flex items-center justify-center gap-2 px-3 py-2 bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400 text-xs font-medium rounded-lg border border-emerald-600/20 transition-all"
-  >
-    <CheckCircle2 className="w-3.5 h-3.5" /> Resolve
-  </button>
-)}
-
-{(ticket.status === "Open" || ticket.status === "Reopened") && (
-  <button
-    onClick={() => updateStatus(ticket._id, "In Progress")}
-    className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 text-xs font-medium rounded-lg border border-blue-600/20 transition-all"
-  >
-    <Loader2 className="w-3.5 h-3.5" /> Start Work
-  </button>
-)}
-                  {ticket.status !== "In Progress" &&
-                    ticket.status !== "Resolved" && (
-                      <button
-                        onClick={() => updateStatus(ticket._id, "In Progress")}
-                        className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 text-xs font-medium rounded-lg border border-blue-600/20 transition-all"
-                      >
-                        <Loader2 className="w-3.5 h-3.5" /> Start Work
-                      </button>
-                    )}
-                  <button
-                    onClick={() => downloadReport(ticket._id)}
-                    className="col-span-2 flex items-center justify-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg border border-white/5 transition-all"
-                  >
-                    <FileText className="w-3.5 h-3.5" /> Download Report
-                  </button>
-                </div> */}
                 <div className="p-4 bg-slate-950/30 border-t border-white/5 grid grid-cols-2 gap-2">
   {(ticket.status === "Open" || ticket.status === "Reopened") && (
     <button
