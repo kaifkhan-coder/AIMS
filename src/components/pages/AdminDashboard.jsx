@@ -1434,6 +1434,9 @@ export default function AdminDashboard() {
   const [workload, setWorkload] = useState([]);
   const [topStaff, setTopStaff] = useState([]);
   const [avgTime, setAvgTime] = useState(0);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const socketRef = useRef(null);
 
@@ -1462,14 +1465,26 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchTickets = async () => {
-    try {
-      const res = await api.get("/admin/incidents", authHeader());
-      setTickets(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      console.error("Failed to fetch tickets", err);
-    }
-  };
+  // const fetchTickets = async () => {
+  //   try {
+  //     const res = await api.get("/admin/incidents", authHeader());
+  //     setTickets(Array.isArray(res.data) ? res.data : []);
+  //   } catch (err) {
+  //     console.error("Failed to fetch tickets", err);
+  //   }
+  // };
+const fetchTickets = async (pageNum = 1, searchQuery = search) => {
+  try {
+    const res = await api.get(
+      `/admin/incidents?page=${pageNum}&limit=20&search=${searchQuery}`,
+      authHeader()
+    );
+    setTickets(res.data.incidents || []);
+    setTotalPages(res.data.totalPages || 1);
+  } catch (err) {
+    console.error("Failed to fetch tickets", err);
+  }
+};
 
   const fetchAuditLogs = async () => {
     try {
@@ -2137,85 +2152,150 @@ return () => {
               </div>
             </section>
 
-            <section className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden backdrop-blur-sm">
-              <div className="p-6 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Activity className="text-rose-400" />
-                  Recent Incidents
-                </h3>
-                <button
-                  onClick={exportTicketsCsv}
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-medium"
+<section className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden backdrop-blur-sm">
+  <div className="p-6 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+      <Activity className="text-rose-400" />
+      Recent Incidents
+    </h3>
+    <div className="flex gap-3">
+      <input
+        type="text"
+        placeholder="Search tickets..."
+        className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500"
+        onChange={(e) => {
+          setSearch(e.target.value);
+          fetchTickets(1, e.target.value);
+        }}
+      />
+      <button
+        onClick={exportTicketsCsv}
+        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-medium"
+      >
+        <Download className="w-4 h-4" />
+        Export CSV
+      </button>
+    </div>
+  </div>
+
+  <div className="overflow-x-auto">
+    <table className="w-full text-sm text-left whitespace-nowrap">
+      <thead className="bg-slate-800/50 text-slate-400 uppercase text-xs font-semibold tracking-wider">
+        <tr>
+          <th className="px-6 py-4">ID</th>
+          <th className="px-6 py-4">Title</th>
+          <th className="px-6 py-4">Dept</th>
+          <th className="px-6 py-4">Status</th>
+          <th className="px-6 py-4">Assigned</th>
+          <th className="px-6 py-4">SLA</th>
+          <th className="px-6 py-4">Actions</th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-slate-800">
+        {tickets.map((t) => (
+          <tr key={t._id} className="hover:bg-slate-800/30">
+            <td className="px-6 py-4 font-mono text-indigo-400">#{t._id.slice(-4)}</td>
+            <td className="px-6 py-4 font-medium text-white">{t.title}</td>
+            <td className="px-6 py-4">
+              <span className="px-2 py-1 rounded-md bg-slate-800 border border-slate-700 text-xs text-slate-300">{t.department}</span>
+            </td>
+            <td className="px-6 py-4">
+              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
+                t.status === "Open" ? "bg-slate-800 border-slate-600 text-slate-300" :
+                t.status === "In Progress" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
+                t.status === "Resolved" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+                "bg-purple-500/10 border-purple-500/20 text-purple-400"
+              }`}>{t.status}</span>
+            </td>
+            <td className="px-6 py-4 text-slate-400">
+              {t.assignedTo?.full_name || <span className="text-slate-600 italic">Unassigned</span>}
+            </td>
+            <td className="px-6 py-4">
+              {isSlaBreached(t) ? (
+                <span className="text-rose-400 text-xs font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Breached</span>
+              ) : (
+                <span className="text-emerald-400 text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3" /> OK</span>
+              )}
+            </td>
+            <td className="px-6 py-4">
+              <div className="flex flex-col gap-2">
+                <select
+                  className="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={t.department}
+                  onChange={(e) => overrideDepartment(t._id, e.target.value)}
                 >
-                  <Download className="w-4 h-4" />
-                  Export CSV
-                </button>
+                  <option value="IT">IT</option>
+                  <option value="Network">Network</option>
+                  <option value="Hardware">Hardware</option>
+                  <option value="Accounts">Accounts</option>
+                  <option value="General">General</option>
+                </select>
+                {t.status === "Resolved" && (
+                  <div className="flex gap-2">
+                    <button onClick={() => approveClose(t._id)} className="px-2 py-1 text-xs rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30">Approve</button>
+                    <button onClick={() => rejectClose(t._id)} className="px-2 py-1 text-xs rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30">Reject</button>
+                  </div>
+                )}
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left whitespace-nowrap">
-                  <thead className="bg-slate-800/50 text-slate-400 uppercase text-xs font-semibold tracking-wider">
-                    <tr>
-                      <th className="px-6 py-4">ID</th>
-                      <th className="px-6 py-4">Title</th>
-                      <th className="px-6 py-4">Dept</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4">Assigned</th>
-                      <th className="px-6 py-4">SLA</th>
-                      <th className="px-6 py-4">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {tickets.map((t) => (
-                      <tr key={t._id} className="hover:bg-slate-800/30">
-                        <td className="px-6 py-4 font-mono text-indigo-400">#{t._id.slice(-4)}</td>
-                        <td className="px-6 py-4 font-medium text-white">{t.title}</td>
-                        <td className="px-6 py-4">
-                          <span className="px-2 py-1 rounded-md bg-slate-800 border border-slate-700 text-xs text-slate-300">{t.department}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                            t.status === "Open" ? "bg-slate-800 border-slate-600 text-slate-300" :
-                            t.status === "In Progress" ? "bg-blue-500/10 border-blue-500/20 text-blue-400" :
-                            t.status === "Resolved" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
-                            "bg-purple-500/10 border-purple-500/20 text-purple-400"
-                          }`}>{t.status}</span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-400">{t.assignedTo?.full_name || <span className="text-slate-600 italic">Unassigned</span>}</td>
-                        <td className="px-6 py-4">
-                          {isSlaBreached(t) ? (
-                            <span className="text-rose-400 text-xs font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Breached</span>
-                          ) : (
-                            <span className="text-emerald-400 text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3" /> OK</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-2">
-                            <select
-                              className="bg-slate-900 border border-slate-700 text-xs rounded-lg px-2 py-1 focus:ring-2 focus:ring-indigo-500 outline-none"
-                              value={t.department}
-                              onChange={(e) => overrideDepartment(t._id, e.target.value)}
-                            >
-                              <option value="IT">IT</option>
-                              <option value="Network">Network</option>
-                              <option value="Hardware">Hardware</option>
-                              <option value="Accounts">Accounts</option>
-                              <option value="General">General</option>
-                            </select>
-                            {t.status === "Resolved" && (
-                              <div className="flex gap-2">
-                                <button onClick={() => approveClose(t._id)} className="px-2 py-1 text-xs rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30">Approve</button>
-                                <button onClick={() => rejectClose(t._id)} className="px-2 py-1 text-xs rounded-lg bg-rose-500/20 text-rose-300 hover:bg-rose-500/30">Reject</button>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  {/* Pagination */}
+  <div className="flex items-center justify-between p-4 border-t border-slate-800">
+    <p className="text-slate-400 text-sm">Page {page} of {totalPages}</p>
+    <div className="flex gap-2">
+      <button
+        onClick={() => { setPage(p => p - 1); fetchTickets(page - 1); }}
+        disabled={page === 1}
+        className="px-4 py-2 bg-slate-800 rounded-lg text-sm disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <button
+        onClick={() => { setPage(p => p + 1); fetchTickets(page + 1); }}
+        disabled={page === totalPages}
+        className="px-4 py-2 bg-slate-800 rounded-lg text-sm disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</section>
           </div>
+{/* <input
+  type="text"
+  placeholder="Search tickets..."
+  className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white"
+  onChange={(e) => {
+    setSearch(e.target.value);
+    fetchTickets(1, e.target.value);
+  }}
+/>
+          <div className="flex items-center justify-between p-4 border-t border-slate-800">
+  <p className="text-slate-400 text-sm">
+    Page {page} of {totalPages}
+  </p>
+  <div className="flex gap-2">
+    <button
+      onClick={() => { setPage(p => p - 1); fetchTickets(page - 1); }}
+      disabled={page === 1}
+      className="px-4 py-2 bg-slate-800 rounded-lg text-sm disabled:opacity-50"
+    >
+      Previous
+    </button>
+    <button
+      onClick={() => { setPage(p => p + 1); fetchTickets(page + 1); }}
+      disabled={page === totalPages}
+      className="px-4 py-2 bg-slate-800 rounded-lg text-sm disabled:opacity-50"
+    >
+      Next
+    </button>
+  </div>
+</div> */}
 
           <div className="space-y-6">
             <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 backdrop-blur-sm">

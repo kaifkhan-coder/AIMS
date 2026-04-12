@@ -181,6 +181,39 @@ router.get("/all", protect, async (req, res) => {
 
   res.json(tickets);
 });
+router.get("/incidents", protect, roleCheck("admin"), async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (req.query.status) filter.status = req.query.status;
+    if (req.query.department) filter.department = req.query.department;
+    if (req.query.search) {
+      filter.title = { $regex: req.query.search, $options: "i" };
+    }
+
+    const [incidents, total] = await Promise.all([
+      Incident.find(filter)
+        .populate("createdBy", "username email")
+        .populate("assignedTo", "full_name department")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Incident.countDocuments(filter)
+    ]);
+
+    res.json({
+      incidents,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 router.get("/verify/:staffId", async (req, res) => {
   const { staffId } = req.params;
