@@ -49,6 +49,50 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+import QRCode from "qrcode";
+
+// Ticket create hone pe QR generate karo
+router.post("/", protect, async (req, res) => {
+  try {
+    const { title, description } = req.body;
+    const aiResult = await classifyIncident(title, description);
+
+    const incident = await Incident.create({
+      title,
+      description,
+      department: aiResult.department,
+      priority: aiResult.priority,
+      createdBy: req.user.id
+    });
+
+    // QR generate karo
+    const qrData = `${process.env.FRONTEND_URL}/resolve-ticket/${incident._id}`;
+    incident.qrCode = await QRCode.toDataURL(qrData);
+    await incident.save();
+
+    res.status(201).json(incident);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Ticket resolve route
+router.get("/resolve/:id", async (req, res) => {
+  try {
+    const incident = await Incident.findByIdAndUpdate(
+      req.params.id,
+      { status: "Resolved", resolvedAt: new Date() },
+      { new: true }
+    ).populate("assignedTo", "full_name");
+
+    if (!incident) return res.status(404).json({ message: "Ticket not found" });
+
+    res.json({ message: "Resolved", incident });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 /* ===============================
    ASSIGNED TICKETS
 ================================ */

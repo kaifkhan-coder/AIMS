@@ -141,6 +141,7 @@ const LiveSystemStatus = lazy(() => import("./components/pages/LiveSystemStatus.
 const SkeletonPage = lazy(() => import("./components/SkeletonPage.jsx"));
 const VerifyStaff = lazy(() => import("./components/pages/verifyStaff.jsx"));
 const VerifyStaffPage = lazy(() => import("./components/pages/VerifyStaffPage.jsx"));
+const ResolveTicket = lazy(() => import("./components/pages/ResolveTicket.jsx"));
 function App() {
   const { loading } = useAuth();
   const navigate = useNavigate();
@@ -190,6 +191,7 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/verify/:staffId" element={<VerifyStaff />} />
           <Route path="/verify/:staffId" element={<VerifyStaffPage />} />
+          <Route path="/resolve-ticket/:id" element={<ResolveTicket />} />
           {/* Super Admin */}
           <Route
             path="/super-dashboard"
