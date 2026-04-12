@@ -2158,6 +2158,16 @@ return () => {
                   <Activity className="text-rose-400" />
                   Recent Incidents
                 </h3>
+                <div className="flex items-center gap-3">
+                      <input
+        type="text"
+        placeholder="Search tickets..."
+        className="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-500"
+        onChange={(e) => {
+          setSearch(e.target.value);
+          fetchTickets(1, e.target.value);
+        }}
+      />
                 <button
                   onClick={exportTicketsCsv}
                   className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-medium"
@@ -2165,6 +2175,7 @@ return () => {
                   <Download className="w-4 h-4" />
                   Export CSV
                 </button>
+              </div>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left whitespace-nowrap">
