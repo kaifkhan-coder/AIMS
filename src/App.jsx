@@ -140,6 +140,7 @@ const SuperAdminDashboard = lazy(() => import("./components/pages/SuperAdminDash
 const LiveSystemStatus = lazy(() => import("./components/pages/LiveSystemStatus.jsx"));
 const SkeletonPage = lazy(() => import("./components/SkeletonPage.jsx"));
 const VerifyStaff = lazy(() => import("./components/pages/verifyStaff.jsx"));
+const VerifyStaffPage = lazy(() => import("./components/pages/VerifyStaffPage.jsx"));
 function App() {
   const { loading } = useAuth();
   const navigate = useNavigate();
@@ -188,6 +189,7 @@ function App() {
           <Route path="/verify-otp-admin" element={<VerifyOTPAdmin />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/verify/:staffId" element={<VerifyStaff />} />
+          <Route path="/verify/:staffId" element={<VerifyStaffPage />} />
           {/* Super Admin */}
           <Route
             path="/super-dashboard"

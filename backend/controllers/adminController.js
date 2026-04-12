@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import sendEmail from "../utils/sendEmail.js";
 import { otpEmailTemplate } from "../utils/emailTemplates.js";
 import User from "../models/User.js";
@@ -9,6 +11,7 @@ from "../llmService.js";
 import { protect, roleCheck } from "../middleware/autMiddleware.js";
 import AuditLog from "../models/AuditLog.js";
 import QRCode from "qrcode";
+console.log("FRONTEND_URL:", process.env.FRONTEND_URL); // DEBUG
 export const getAllIncidentsForAdmin = [
   protect,
   roleCheck("admin"),
@@ -230,7 +233,6 @@ await AuditLog.create({
 });
 // ✅ Generate QR URL
 const qrData = `${process.env.FRONTEND_URL}/verify/${newStaff._id}`;
-
 console.log("QR DATA:", qrData); // DEBUG
 
 // ✅ Generate QR Image
