@@ -28,18 +28,22 @@ router.post("/chat", async (req, res) => {
     }
 
     // 🤖 STEP 2: AI Response
-    const reply = await askLLM(`
-You are an AI IT Support Assistant.
+const reply = await askLLM(`
+You are an intelligent IT Support Agent for an Incident Management System.
 
-User Issue: ${message}
+Rules:
+- Be short, clear, and helpful
+- If issue is technical → give steps
+- If unsure → ask clarification
+- Suggest ticket creation ONLY if needed
 
-1. Give short solution
-2. Ask if user wants to create a ticket
+User Issue: "${message}"
 
-Reply in JSON:
+Respond ONLY in JSON:
 {
   "answer": "...",
-  "askTicket": true
+  "askTicket": true/false,
+  "priority": "Low/Medium/High"
 }
 `);
 

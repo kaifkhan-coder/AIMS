@@ -5,7 +5,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [showTicketBtn, setShowTicketBtn] = useState(false);
-
+  const [lastMessage, setLastMessage] = useState("");
   const sendMessage = async () => {
     if (!input) return;
 
@@ -14,7 +14,7 @@ export default function Chatbot() {
 
     const res = await api.post("/chatbot/chat", {
       message: input,
-      userId: "USER_ID_HERE"
+      userId: "USER_ID_HERE" // Replace with actual user ID from auth context
     });
 
     if (res.data.type === "solution") {
@@ -35,6 +35,7 @@ export default function Chatbot() {
 
       if (res.data.askTicket) {
         setShowTicketBtn(true);
+        setLastMessage(input);
       }
     }
 
