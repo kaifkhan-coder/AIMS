@@ -32,7 +32,6 @@
     const [status, setStatus] = useState("idle");
 
     const token = localStorage.getItem("token");
-
     const [listening, setListening] = useState(false);
     const recognitionRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -236,7 +235,20 @@ setStatus("idle");
         if (file) {
           formData.append("attachment", file);
         }
+                    if (file) {
+  const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+  if (!allowedTypes.includes(file.type)) {
+    setStatus("error");
+    setErrors({ file: "Only JPG, PNG, and PDF files are allowed" });
+    return;
+  }
 
+  if (file.size > 5 * 1024 * 1024) {
+    setStatus("error");
+    setErrors({ file: "File too large. Max size is 5MB" });
+    return;
+  }
+}
 const res = await axios.post(
   `${import.meta.env.VITE_API_URL}/api/incidents`,
   formData,
@@ -264,20 +276,6 @@ const res = await axios.post(
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
-            if (file) {
-  const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
-  if (!allowedTypes.includes(file.type)) {
-    setStatus("error");
-    setErrors({ file: "Only JPG, PNG, and PDF files are allowed" });
-    return;
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    setStatus("error");
-    setErrors({ file: "File too large. Max size is 5MB" });
-    return;
-  }
-}
       } catch (err) {
         setAiLoading(false);
         setSubmitting(false);

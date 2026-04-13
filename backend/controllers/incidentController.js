@@ -1403,11 +1403,13 @@ const allowedTransitions = {
 export const createIncident = async (req, res) => {
   try {
     const { title, description, category } = req.body;
-
+        console.log("USER:", req.user);
+        console.log("REQ.USER:", req.user);
+console.log("BODY:", req.body);
+console.log("FILE:", req.file);
     if (!title?.trim() || !description?.trim()) {
       return res.status(400).json({ message: "Title and description required" });
     }
-    console.log("USER:", req.user);
     const ticketId = `INC-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
     let department = "General";
@@ -1512,7 +1514,6 @@ export const createIncident = async (req, res) => {
     } catch (e) {
       console.log("User email failed:", e.message);
     }
-
     if (staff?.email) {
       try {
         await sendEmail(
@@ -1527,10 +1528,13 @@ export const createIncident = async (req, res) => {
 
     return res.status(201).json(incident);
   } catch (err) {
-    console.error("CREATE INCIDENT ERROR:", err);
-    return res.status(500).json({
+console.error(
+  "Ticket create error:",
+  err?.response?.data || err.message
+);    return res.status(500).json({
       message: "Ticket creation failed",
       error: err.message,
+      stack: err.stack,
     });
   }
 };
