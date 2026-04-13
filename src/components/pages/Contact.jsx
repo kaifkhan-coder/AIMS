@@ -50,7 +50,7 @@ export default function Contact() {
         <a
   href="https://wa.me/9326865425"
   target="_blank"
-  className="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded-full"
+  className="fixed bottom-20 right-6 bg-green-500 text-white px-4 py-2 rounded-full z-50"
 >
   Chat on WhatsApp
 </a>

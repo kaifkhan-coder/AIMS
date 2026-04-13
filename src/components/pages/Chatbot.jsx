@@ -14,7 +14,7 @@ export default function Chatbot() {
 
     const res = await api.post("/chatbot/chat", {
       message: input,
-      userId: "USER_ID_HERE" // Replace with actual user ID from auth context
+      userId: user?.id // Replace with actual user ID from auth context
     });
 
     if (res.data.type === "solution") {
@@ -44,8 +44,8 @@ export default function Chatbot() {
 
   const createTicket = async () => {
     const res = await api.post("/chatbot/create-ticket", {
-      message: input,
-      userId: "USER_ID_HERE"
+      message: lastMessage,
+      userId: user?.id
     });
 
     setMessages(prev => [
