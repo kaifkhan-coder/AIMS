@@ -237,15 +237,16 @@ setStatus("idle");
           formData.append("attachment", file);
         }
 
-        const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/api/incidents`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+const res = await axios.post(
+  `${import.meta.env.VITE_API_URL}/api/incidents`,
+  formData,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "multipart/form-data",
+    },
+  }
+);
 
         console.log("Ticket created successfully:", res.data);
 

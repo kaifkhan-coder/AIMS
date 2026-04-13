@@ -1515,6 +1515,10 @@ export const createIncident = async (req, res) => {
           "New Ticket Assigned",
           `Ticket ${incident.ticketId} has been assigned to you.`
         );
+        await sendWhatsAppMessage(
+          staff.phoneNumber,
+          `Ticket ${incident.ticketId} has been assigned to you. Please check your email for details.`
+        );
       } catch (e) {
         console.log("Staff email failed:", e.message);
       }

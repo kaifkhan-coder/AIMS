@@ -1237,7 +1237,7 @@
 //     res.status(500).json({ message: "Server error" });
 //   }
 // };
-
+import QRCode from "qrcode";
 import crypto from "crypto";
 import Incident from "../models/incident.js";
 import User from "../models/User.js";
@@ -1407,7 +1407,7 @@ export const createIncident = async (req, res) => {
     if (!title?.trim() || !description?.trim()) {
       return res.status(400).json({ message: "Title and description required" });
     }
-
+    console.log("USER:", req.user);
     const ticketId = `INC-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
 
     let department = "General";
@@ -1476,7 +1476,6 @@ export const createIncident = async (req, res) => {
     } catch (e) {
       console.log("User notification failed:", e.message);
     }
-
     try {
       await Notification.create({
         role: "admin",
@@ -1615,7 +1614,7 @@ export const getMyIncidents = async (req, res) => {
       Incident.countDocuments({ createdBy: req.user._id })
     ]);
 
-    res.json(incidents);
+    res.json({incidents, total, page, totalPages: Math.ceil(total / limit)});
   } catch (error) {
     console.error("GET MY INCIDENTS ERROR:", error);
     res.status(500).json({ message: "Server error" });
