@@ -1503,7 +1503,7 @@ export const createIncident = async (req, res) => {
     const qrData = `${process.env.FRONTEND_URL}/resolve-ticket/${incident._id}`;
     incident.qrCode = await QRCode.toDataURL(qrData);
     await incident.save();
-    
+
     try {
       await sendEmail(
         req.user.email,
@@ -1609,7 +1609,7 @@ export const getMyIncidents = async (req, res) => {
     const [incidents, total] = await Promise.all([
       Incident.find({ createdBy: req.user._id })
         .sort({ createdAt: -1 })
-        .select("ticketId title status priority category createdAt")
+        .select("ticketId title status priority category createdAt qrCode")
         .skip(skip)
         .limit(limit),
       Incident.countDocuments({ createdBy: req.user._id })

@@ -344,45 +344,45 @@ export default function MyTickets() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("date");
   const [page, setPage] = useState(1);
+  const [qrModal, setQrModal] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
+const fetchTickets = async (pageNumber = 1) => {
+  try {
+    setLoading(true);
+    setError("");
+
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/incidents/my?page=${pageNumber}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    console.log("MY TICKETS RESPONSE:", res.data);
+
+    if (Array.isArray(res.data)) {
+      setTickets(res.data);
+      setTotalPages(1);
+      setSelectedId(res.data?.[0]?._id || null);
+    } else {
+      setTickets(res.data.incidents || []);
+      setTotalPages(res.data.totalPages || 1);
+      setSelectedId(res.data.incidents?.[0]?._id || null);
+    }
+
+  } catch (err) {
+    console.error("FETCH MY TICKETS ERROR:", err);
+    setError("Failed to fetch tickets");
+  } finally {
+    setLoading(false);
+  }
+};
+
 useEffect(() => {
   if (!token || !user) return;
+  fetchTickets(page);
+}, [user, token, page]);
 
-  const fetchTickets = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/incidents/my`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      console.log("MY TICKETS RESPONSE:", res.data); // ✅ debug
-
-      // ✅ Handle both formats
-      if (Array.isArray(res.data)) {
-        setTickets(res.data);
-        setTotalPages(1);
-        setSelectedId(res.data?.[0]?._id || null);
-      } else {
-        setTickets(res.data.incidents || []);
-        setTotalPages(res.data.totalPages || 1);
-        setSelectedId(res.data.incidents?.[0]?._id || null);
-      }
-
-    } catch (err) {
-      console.error("FETCH MY TICKETS ERROR:", err);
-      setError("Failed to fetch tickets");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchTickets();
-}, [user, token]);
   const reopenTicket = async (e, ticketId) => {
     e.stopPropagation();
 
@@ -530,6 +530,7 @@ useEffect(() => {
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Reported</th>
               <th className="px-6 py-4">Actions</th>
+              <th className="px-6 py-4">QR Code</th>
             </tr>
           </thead>
 
@@ -596,6 +597,18 @@ useEffect(() => {
                         )}
                       </div>
                     </td>
+<td className="px-6 py-4">
+  {t.qrCode ? (
+    <img
+      src={t.qrCode}
+      alt="Ticket QR"
+      className="w-12 h-12 object-cover rounded cursor-pointer hover:scale-110 transition"
+      onClick={(e) => { e.stopPropagation(); setQrModal(t.qrCode); }}
+    />
+  ) : (
+    <span className="text-slate-500 text-xs">No QR</span>
+  )}
+</td>
                   </motion.tr>
                 ))
               )}
@@ -645,8 +658,32 @@ useEffect(() => {
             </motion.div>
           </motion.div>
         )}
+  {qrModal && (
+  <div
+    className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+    onClick={() => setQrModal(null)}
+  >
+    <div
+      className="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-center"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h3 className="text-white font-bold mb-4 text-lg">Ticket QR Code</h3>
+      <img src={qrModal} alt="QR Code" className="w-64 h-64 rounded-xl mx-auto" />
+      <p className="text-slate-400 text-sm mt-4">
+        Show this QR to staff to confirm issue resolution
+      </p>
+      <button
+        onClick={() => setQrModal(null)}
+        className="mt-4 px-6 py-2 bg-slate-800 rounded-xl text-white text-sm"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
       </AnimatePresence>
     </div>
+    
   );
 }
 
