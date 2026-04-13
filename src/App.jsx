@@ -143,6 +143,11 @@ const LiveSystemStatus = lazy(() => import("./components/pages/LiveSystemStatus.
 const SkeletonPage = lazy(() => import("./components/SkeletonPage.jsx"));
 const VerifyStaffPage = lazy(() => import("./components/pages/VerifyStaffPage.jsx"));
 const ResolveTicket = lazy(() => import("./components/pages/ResolveTicket.jsx"));
+const Support = lazy(() => import("./components/pages/Support.jsx"));
+const Contact = lazy(() => import("./components/pages/Contact.jsx"));
+const About = lazy(() => import("./components/pages/About.jsx"));
+const Docs = lazy(() => import("./components/pages/Docs.jsx"));
+const Chatbot = lazy(() => import("./components/pages/Chatbot.jsx"));
 function App() {
   const { loading } = useAuth();
   const navigate = useNavigate();
@@ -192,13 +197,12 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/verify/:staffId" element={<VerifyStaffPage />} />
           <Route path="/resolve-ticket/:id" element={<ResolveTicket />} />
-          <Route path="/support" element={<div className="p-10 text-center">Support Network Coming Soon!</div>} />
-          <Route path="/contact" element={<div className="p-10 text-center">Contact Us Coming Soon!</div>} />
-          <Route path="/about" element={<div className="p-10 text-center">About The System Coming Soon!</div>} />
-          <Route path="/docs" element={<div className="p-10 text-center">Documentation Coming Soon!</div>} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/docs" element={<Docs />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
-          <Route path="/terms" element={<div className="p-10 text-center">Terms of Service Coming Soon!</div>} />
           {/* Super Admin */}
           <Route
             path="/super-dashboard"
@@ -247,6 +251,7 @@ function App() {
           <Route path="/system-status" element={<LiveSystemStatus />} />
         </Routes>
       </Suspense>
+      <Chatbot />
     </>
   );
 }

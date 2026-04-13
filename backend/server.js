@@ -30,6 +30,8 @@ import llmRoutes from "./routes/llm.js";
 import bootstrapRoutes from "./routes/bootstrap.js";
 import superadminRoutes from "./routes/superadminRoutes.js";
 import statusRoutes from "./routes/statusRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
+import chatbotRoutes from "./routes/chatbotRoutes.js";
 
 import User from "./models/User.js";
 // import { checkSlaBreach } from "./services/slaWatcher.js";
@@ -276,6 +278,8 @@ app.use("/api/bootstrap", bootstrapRoutes);
 app.use("/api/account-appeals", accountAppealRoutes);
 app.use("/api/superadmin", superadminRoutes);
 app.use("/api/status", statusRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 app.use((err, req, res, next) => {
   if (err.name === "MulterError") {
     if (err.code === "LIMIT_FILE_SIZE") {
