@@ -51,52 +51,24 @@ const upload = multer({ storage });
 
 import QRCode from "qrcode";
 
-// Ticket create hone pe QR generate karo
-// router.post("/", protect, async (req, res) => {
-//   try {
-//     const { title, description } = req.body;
-//     const aiResult = await classifyIncident(title, description);
-
-//     const incident = await Incident.create({
-//       title,
-//       description,
-//       department: aiResult.department,
-//       priority: aiResult.priority,
-//       createdBy: req.user.id
-//     });
-
-//     // QR generate karo
-//     const qrData = `${process.env.FRONTEND_URL}/resolve-ticket/${incident._id}`;
-//     incident.qrCode = await QRCode.toDataURL(qrData);
-//     await incident.save();
-
-//     res.status(201).json(incident);
-//   } catch (err) {
-//   console.error("❌ CREATE INCIDENT ERROR:", err);
-//   res.status(500).json({ 
-//     message: "Server error",
-//     error: err.message,
-//     stack: err.stack
-//   });
-// } 
-// });
+// Ticket create hone pe QR generate karke staff ko bhejne ka code yahan add kar sakte ho, agar chahiye toh. QR code mein ticket details ya URL ho sakta hai jisse staff easily access kar sake ticket ko scan karke.   
 
 // Ticket resolve route
-router.get("/resolve/:id", async (req, res) => {
-  try {
-    const incident = await Incident.findByIdAndUpdate(
-      req.params.id,
-      { status: "Resolved", resolvedAt: new Date() },
-      { new: true }
-    ).populate("assignedTo", "full_name");
+// router.get("/resolve/:id", async (req, res) => {
+//   try {
+//     const incident = await Incident.findByIdAndUpdate(
+//       req.params.id,
+//       { status: "Resolved", resolvedAt: new Date() },
+//       { new: true }
+//     ).populate("assignedTo", "full_name");
 
-    if (!incident) return res.status(404).json({ message: "Ticket not found" });
+//     if (!incident) return res.status(404).json({ message: "Ticket not found" });
 
-    res.json({ message: "Resolved", incident });
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
+//     res.json({ message: "Resolved", incident });
+//   } catch (err) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// });
 
 /* ===============================
    ASSIGNED TICKETS

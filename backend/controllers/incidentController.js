@@ -1501,7 +1501,7 @@ console.log("FILE:", req.file);
     // const qrCode = await askLLM(
     //   `Generate a QR code that links to the ticket details page for ticket ${incident.ticketId}. Return only the image URL.`
     // );
-    const qrData = `${process.env.FRONTEND_URL}/resolve-ticket/${incident._id}`;
+    const qrData = `${process.env.FRONTEND_URL}/ticket/${incident._id}`;
     incident.qrCode = await QRCode.toDataURL(qrData);
     await incident.save();
 
