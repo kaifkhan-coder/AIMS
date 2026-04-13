@@ -18,6 +18,7 @@
     const [category, setCategory] = useState("General");
     const [priority, setPriority] = useState("Low");
     const [file, setFile] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
 
     const [suggestions, setSuggestions] = useState([]);
     const [suggestionLoading, setSuggestionLoading] = useState(false);
@@ -101,20 +102,7 @@
       setErrors({});
       return true;
     };
-    if (file) {
-  const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
-  if (!allowedTypes.includes(file.type)) {
-    setStatus("error");
-    setErrors({ file: "Only JPG, PNG, and PDF files are allowed" });
-    return;
-  }
 
-  if (file.size > 5 * 1024 * 1024) {
-    setStatus("error");
-    setErrors({ file: "File too large. Max size is 5MB" });
-    return;
-  }
-}
     /* ---------------- AI PRIORITY PREDICTION ---------------- */
     const predictPriority = async () => {
       if (!token) return priority;
@@ -169,8 +157,8 @@
           err?.response?.data || err.message
         );
       } finally {
-        setAiLoading(false);
-      }
+  setSubmitting(false);
+}
     };
 
     /* ---------------- GET SOLUTION SUGGESTIONS ---------------- */
@@ -232,8 +220,8 @@
         return;
       }
 
-      setStatus("loading");
-
+setSubmitting(true);
+setStatus("idle");
       try {
         setAiLoading(true);
         const aiPriority = await predictPriority();
@@ -275,10 +263,23 @@
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
+            if (file) {
+  const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+  if (!allowedTypes.includes(file.type)) {
+    setStatus("error");
+    setErrors({ file: "Only JPG, PNG, and PDF files are allowed" });
+    return;
+  }
 
-        setTimeout(() => setStatus("idle"), 3000);
+  if (file.size > 5 * 1024 * 1024) {
+    setStatus("error");
+    setErrors({ file: "File too large. Max size is 5MB" });
+    return;
+  }
+}
       } catch (err) {
         setAiLoading(false);
+        setSubmitting(false);
         console.error(
           "Ticket create error:",
           err?.response?.data || err.message
@@ -286,6 +287,7 @@
         setStatus("error");
         setTimeout(() => setStatus("idle"), 3000);
       }
+
     };
 
     /* ---------------- UI ---------------- */
@@ -442,13 +444,13 @@ Possible Root Cause:
               </button>
             </div>
 
-            <button
-              type="submit"
-              disabled={status === "loading"}
-              className="w-full bg-green-600 hover:bg-green-500 p-3 rounded transition disabled:opacity-50"
-            >
-              {status === "loading" ? "Submitting..." : "Submit Ticket"}
-            </button>
+<button
+  type="submit"
+  disabled={submitting}
+  className="w-full bg-green-600 hover:bg-green-500 p-3 rounded transition disabled:opacity-50"
+>
+  {submitting ? "Submitting..." : "Submit Ticket"}
+</button>
           </form>
 
           <AnimatePresence>

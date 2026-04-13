@@ -13,7 +13,10 @@ const incidentSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-
+    qrCode: {
+      type: String,
+      default: null,
+    },
     comments: [
       {
         user: {

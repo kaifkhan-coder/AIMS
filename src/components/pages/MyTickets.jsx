@@ -343,54 +343,46 @@ export default function MyTickets() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [sortBy, setSortBy] = useState("date");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+useEffect(() => {
+  if (!token || !user) return;
 
-  useEffect(() => {
-    if (!token || !user) return;
-
-    const fetchTickets = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/incidents/my`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = Array.isArray(res.data) ? res.data : [];
-        setTickets(data);
-        setSelectedId(data?.[0]?._id || null);
-      } catch (err) {
-        console.error("FETCH MY TICKETS ERROR:", err);
-        setError("Failed to fetch tickets");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTickets();
-  }, [user, token]);
-
-  const handleDelete = async (e, ticketId) => {
-    e.stopPropagation();
-
-    if (!window.confirm("Are you sure you want to delete this ticket?")) return;
-
+  const fetchTickets = async () => {
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/api/incidents/${ticketId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      setLoading(true);
+      setError("");
 
-      setTickets((prev) => prev.filter((t) => t._id !== ticketId));
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/incidents/my`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-      if (selectedId === ticketId) {
-        setSelectedId(null);
+      console.log("MY TICKETS RESPONSE:", res.data); // ✅ debug
+
+      // ✅ Handle both formats
+      if (Array.isArray(res.data)) {
+        setTickets(res.data);
+        setTotalPages(1);
+        setSelectedId(res.data?.[0]?._id || null);
+      } else {
+        setTickets(res.data.incidents || []);
+        setTotalPages(res.data.totalPages || 1);
+        setSelectedId(res.data.incidents?.[0]?._id || null);
       }
+
     } catch (err) {
-      console.error("DELETE ERROR:", err);
-      alert("Failed to delete ticket");
+      console.error("FETCH MY TICKETS ERROR:", err);
+      setError("Failed to fetch tickets");
+    } finally {
+      setLoading(false);
     }
   };
 
+  fetchTickets();
+}, [user, token]);
   const reopenTicket = async (e, ticketId) => {
     e.stopPropagation();
 
@@ -602,13 +594,6 @@ export default function MyTickets() {
                             Reopen
                           </button>
                         )}
-
-                        <button
-                          onClick={(e) => handleDelete(e, t._id)}
-                          className="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-xs"
-                        >
-                          Delete
-                        </button>
                       </div>
                     </td>
                   </motion.tr>
@@ -618,6 +603,27 @@ export default function MyTickets() {
           </tbody>
         </table>
       </div>
+                              <div className="flex items-center justify-between p-4 border-t border-slate-800">
+  <p className="text-slate-400 text-sm">
+    Page {page} of {totalPages}
+  </p>
+  <div className="flex gap-2">
+    <button
+      onClick={() => { setPage(p => p - 1); fetchTickets(page - 1); }}
+      disabled={page === 1}
+      className="px-4 py-2 bg-slate-800 rounded-lg text-sm disabled:opacity-50"
+    >
+      Previous
+    </button>
+    <button
+      onClick={() => { setPage(p => p + 1); fetchTickets(page + 1); }}
+      disabled={page === totalPages}
+      className="px-4 py-2 bg-slate-800 rounded-lg text-sm disabled:opacity-50"
+    >
+      Next
+    </button>
+  </div>
+</div>
 
       <AnimatePresence>
         {selectedId && (

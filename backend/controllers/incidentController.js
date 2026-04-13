@@ -1497,7 +1497,13 @@ export const createIncident = async (req, res) => {
         console.log("Staff notification failed:", e.message);
       }
     }
-
+    // const qrCode = await askLLM(
+    //   `Generate a QR code that links to the ticket details page for ticket ${incident.ticketId}. Return only the image URL.`
+    // );
+    const qrData = `${process.env.FRONTEND_URL}/resolve-ticket/${incident._id}`;
+    incident.qrCode = await QRCode.toDataURL(qrData);
+    await incident.save();
+    
     try {
       await sendEmail(
         req.user.email,
@@ -1596,9 +1602,18 @@ export const addComment = async (req, res) => {
 ================================ */
 export const getMyIncidents = async (req, res) => {
   try {
-    const incidents = await Incident.find({ createdBy: req.user._id })
-      .sort({ createdAt: -1 })
-      .select("ticketId title status priority category createdAt");
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [incidents, total] = await Promise.all([
+      Incident.find({ createdBy: req.user._id })
+        .sort({ createdAt: -1 })
+        .select("ticketId title status priority category createdAt")
+        .skip(skip)
+        .limit(limit),
+      Incident.countDocuments({ createdBy: req.user._id })
+    ]);
 
     res.json(incidents);
   } catch (error) {

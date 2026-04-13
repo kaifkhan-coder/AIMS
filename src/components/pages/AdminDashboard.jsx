@@ -2188,6 +2188,7 @@ return () => {
                       <th className="px-6 py-4">Assigned</th>
                       <th className="px-6 py-4">SLA</th>
                       <th className="px-6 py-4">Actions</th>
+                      <th className="px-6 py-4">QR Code</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
@@ -2235,6 +2236,13 @@ return () => {
                             )}
                           </div>
                         </td>
+                        <td className="px-6 py-4">
+  {t.qrCode ? (
+    <img src={t.qrCode} alt="Ticket QR" className="w-12 h-12" />
+  ) : (
+    <span className="text-slate-500 text-xs">No QR</span>
+  )}
+</td>
                       </tr>
                     ))}
                   </tbody>
