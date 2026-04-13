@@ -122,6 +122,8 @@ import { Toaster } from "react-hot-toast";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./components/context/AuthContext.jsx";
+import PrivacyPolicy from "./components/pages/PrivacyPolicy.jsx";
+import TermsOfService from "./components/pages/TermsOfService.jsx";
 
 // ✅ Lazy Imports
 const AdminDashboard = lazy(() => import("./components/pages/AdminDashboard"));
@@ -190,6 +192,13 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/verify/:staffId" element={<VerifyStaffPage />} />
           <Route path="/resolve-ticket/:id" element={<ResolveTicket />} />
+          <Route path="/support" element={<div className="p-10 text-center">Support Network Coming Soon!</div>} />
+          <Route path="/contact" element={<div className="p-10 text-center">Contact Us Coming Soon!</div>} />
+          <Route path="/about" element={<div className="p-10 text-center">About The System Coming Soon!</div>} />
+          <Route path="/docs" element={<div className="p-10 text-center">Documentation Coming Soon!</div>} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/terms" element={<div className="p-10 text-center">Terms of Service Coming Soon!</div>} />
           {/* Super Admin */}
           <Route
             path="/super-dashboard"

@@ -1275,17 +1275,23 @@ export default function Home() {
           </div>
           
           <div className="flex flex-wrap justify-center gap-10 mb-12 text-[10px] font-black uppercase tracking-[0.4em] text-white/30 italic">
-            <a href="#" className="hover:text-[#ff2a6d] transition-colors">Protocol_Privacy</a>
-            <a href="#" className="hover:text-[#ff2a6d] transition-colors">Service_Terms</a>
-            <a href="#" className="hover:text-[#ff2a6d] transition-colors">Satellite_Support</a>
+            {/* <a href="#" className="hover:text-[#ff2a6d] transition-colors">Protocol_Privacy</a>
+            <a href="#" className="hover:text-[#ff2a6d] transition-colors">Service_Terms</a> */}
+            <Link to="/support" className="hover:text-[#ff2a6d] transition-colors">Support_Net</Link> 
+            <Link to="/contact" className="hover:text-[#ff2a6d] transition-colors">Contact_Us</Link>
+            <Link to="/about" className="hover:text-[#ff2a6d] transition-colors">About_The_System</Link>
+            <Link to="/docs" className="hover:text-[#ff2a6d] transition-colors">Documentation</Link>
+            <Link to="/privacy" className="hover:text-[#ff2a6d] transition-colors">Privacy_Policy</Link>
+            <Link to="/terms" className="hover:text-[#ff2a6d] transition-colors">Terms_of_Service</Link>
+
           </div>
 
           <div className="space-y-2">
             <p className="text-white/20 text-[10px] font-mono uppercase tracking-widest">
-              © {new Date().getFullYear()} AUTOMATED INCIDENT MANAGEMENT SYSTEM // PROJECT_NERV
+              © {new Date().getFullYear()} AUTOMATED INCIDENT MANAGEMENT SYSTEM 
             </p>
             <p className="text-[#05d9e8]/40 text-xs font-black italic uppercase tracking-widest">
-              Architect: Khan Mohammed Kaif
+              Developed by Khan Mohammed Kaif
             </p>
           </div>
 
