@@ -110,6 +110,9 @@ export default function TicketDetails() {
           >
             Add Comment
           </button>
+          <button onClick={() => navigate(`/resolve/${id}`)}>
+  Resolve Ticket
+</button>
         </div>
       </div>
     </motion.div>
