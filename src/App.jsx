@@ -136,6 +136,7 @@ const VerifyOTP = lazy(() => import("./components/pages/VerifyOTP"));
 const Home = lazy(() => import("./components/pages/Home"));
 const StaffProfile = lazy(() => import("./components/pages/StaffProfile.jsx"));
 const UserProfile = lazy(() => import("./components/pages/UserProfile.jsx"));
+const TicketDetails = lazy(() => import("./components/pages/TicketDetails.jsx"));
 const AdminRoute = lazy(() => import("./components/pages/AdminRoutes.jsx"));
 const VerifyOTPAdmin = lazy(() => import("./components/pages/VerifyOTPAdmin.jsx"));
 const SuperAdminDashboard = lazy(() => import("./components/pages/SuperAdminDashboard.jsx"));
@@ -197,6 +198,8 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/verify/:staffId" element={<VerifyStaffPage />} />
           <Route path="/resolve-ticket/:id" element={<ResolveTicket />} />
+          <Route path="/ticket/:id" element={<TicketDetails />} />
+
           <Route path="/support" element={<Support />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
