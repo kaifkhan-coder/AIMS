@@ -1,13 +1,26 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, XCircle, Clock, Loader2, Ticket, ShieldCheck, ArrowLeft } from "lucide-react";
+import { 
+  CheckCircle2, 
+  XCircle, 
+  Clock, 
+  Loader2, 
+  Ticket, 
+  ShieldCheck, 
+  ArrowLeft, 
+  AlertCircle, 
+  ChevronRight,
+  MessageSquareQuote
+} from "lucide-react";
 import api from "../../services/api";
 
 export default function ResolveTicket() {
   const { id } = useParams();
   const [ticket, setTicket] = useState(null);
   const [status, setStatus] = useState("loading");
+  const [showPopup, setShowPopup] = useState(false);
+  const [shayari, setShayari] = useState("");
 
   useEffect(() => {
     api.get(`/incidents/${id}`)
@@ -18,36 +31,38 @@ export default function ResolveTicket() {
       .catch(() => setStatus("error"));
   }, [id]);
 
-const handleResolve = async () => {
-  try {
-    await api.put(`/incidents/${id}/status`, {
-      status: "Resolved"
-    });
-    setStatus("success");
-  } catch (err) {
-    console.log(err);
-    setStatus("error");
-  }
-};
+  const handleResolve = async () => {
+    try {
+      await api.put(`/incidents/${id}/status`, {
+        status: "Resolved"
+      });
+
+      // LLM Shayari call - styled as a closing thought
+      const res = await api.get(`/incidents/shayari`);
+      setShayari(res.data.shayari);
+
+      setShowPopup(true);
+      setStatus("success");
+
+    } catch (err) {
+      setStatus("error");
+    }
+  };
 
   const cardVariants = {
-    initial: { scale: 0.9, opacity: 0, y: 20 },
-    animate: { scale: 1, opacity: 1, y: 0, transition: { type: "spring", stiffness: 260, damping: 20 } },
-    exit: { scale: 0.9, opacity: 0, transition: { duration: 0.2 } }
+    initial: { opacity: 0, y: 10, scale: 0.98 },
+    animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
+    exit: { opacity: 0, scale: 0.98, transition: { duration: 0.2 } }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0c] relative overflow-hidden font-sans selection:bg-pink-500 selection:text-white">
-      {/* Anime-style Background Elements */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/20 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-pink-600/20 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
-        {/* Decorative Grid */}
-        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 font-sans">
+      {/* Professional Background Pattern */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none">
+        <div className="h-full w-full bg-[matrix(0,1,1,0)]" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
       </div>
 
-      <div className="relative z-10 w-full max-w-md px-4">
+      <div className="relative z-10 w-full max-w-lg">
         <AnimatePresence mode="wait">
           {status === "loading" && (
             <motion.div
@@ -56,10 +71,10 @@ const handleResolve = async () => {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="flex flex-col items-center justify-center p-12 bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 rounded-3xl"
+              className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 shadow-xl border border-slate-200 dark:border-slate-800 rounded-2xl text-center"
             >
-              <Loader2 className="w-12 h-12 text-pink-500 animate-spin mb-4" />
-              <p className="text-zinc-400 font-medium tracking-widest uppercase text-xs">Syncing with Server...</p>
+              <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-4" />
+              <p className="text-slate-600 dark:text-slate-400 font-medium tracking-tight">Fetching ticket details...</p>
             </motion.div>
           )}
 
@@ -70,46 +85,53 @@ const handleResolve = async () => {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="bg-zinc-900/80 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden relative group"
+              className="bg-white dark:bg-slate-900 shadow-2xl rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden"
             >
-              {/* Accent Line */}
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-indigo-500 to-cyan-500" />
-              
-              <div className="flex justify-center mb-6">
-                <div className="p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-                  <Ticket className="w-10 h-10 text-indigo-400" />
+              <div className="p-6 md:p-8">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+                    <Ticket className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="text-left">
+                    <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Resolution Request</h2>
+                    <p className="text-xs text-slate-400">ID: #{id.substring(0, 8)}</p>
+                  </div>
                 </div>
-              </div>
 
-              <h1 className="text-2xl font-black text-white mb-1 tracking-tight text-center">
-                {ticket.title}
-              </h1>
-              <p className="text-zinc-500 text-xs text-center font-bold uppercase tracking-widest mb-8">
-                Agent: <span className="text-indigo-400">{ticket.assignedTo?.full_name || "Operative-01"}</span>
-              </p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+                  {ticket.title}
+                </h1>
+                
+                <div className="flex items-center gap-2 mb-8">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Assigned to <span className="font-semibold text-slate-900 dark:text-slate-200">{ticket.assignedTo?.full_name || "Support Agent"}</span>
+                  </p>
+                </div>
 
-              <div className="bg-black/40 p-4 rounded-2xl mb-8 border border-white/5">
-                <p className="text-zinc-300 text-center leading-relaxed font-medium">
-                  Has the issue been fully resolved to your satisfaction?
-                </p>
-              </div>
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl mb-8 border border-slate-100 dark:border-slate-800">
+                  <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
+                    Please confirm if the reported issue has been resolved to your satisfaction. Closing this ticket will archive the conversation.
+                  </p>
+                </div>
 
-              <div className="grid grid-cols-1 gap-3">
-                <button
-                  onClick={handleResolve}
-                  className="group relative flex items-center justify-center gap-2 px-6 py-4 bg-white text-black font-black rounded-2xl hover:bg-indigo-400 hover:text-white transition-all duration-300 transform active:scale-95"
-                >
-                  <CheckCircle2 className="w-5 h-5" />
-                  MISSION COMPLETE
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleResolve}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/20 active:scale-[0.98]"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                    Confirm Resolution
+                  </button>
 
-                <button
-                  onClick={() => setStatus("pending")}
-                  className="flex items-center justify-center gap-2 px-6 py-4 bg-zinc-800/50 text-zinc-400 font-bold rounded-2xl hover:bg-zinc-800 hover:text-rose-400 transition-all duration-300"
-                >
-                  <XCircle className="w-5 h-5" />
-                  STILL PENDING
-                </button>
+                  <button
+                    onClick={() => setStatus("pending")}
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all active:scale-[0.98]"
+                  >
+                    <XCircle className="w-5 h-5" />
+                    Still Pending
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
@@ -121,20 +143,18 @@ const handleResolve = async () => {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="bg-zinc-900/80 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-emerald-500/30 text-center shadow-[0_0_40px_rgba(16,185,129,0.1)]"
+              className="bg-white dark:bg-slate-900 shadow-2xl rounded-2xl border border-emerald-100 dark:border-emerald-900/30 p-10 text-center"
             >
-              <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center border border-emerald-500/20">
-                  <ShieldCheck className="w-10 h-10 text-emerald-400" />
-                </div>
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 dark:bg-emerald-900/20 rounded-full mb-6">
+                <ShieldCheck className="w-8 h-8 text-emerald-600" />
               </div>
-              <h1 className="text-3xl font-black text-white mb-2 tracking-tighter italic">TICKET CLOSED</h1>
-              <p className="text-zinc-400 mb-6">Deployment successful. Thank you for your feedback.</p>
-              <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Ticket Resolved</h1>
+              <p className="text-slate-600 dark:text-slate-400 mb-8">The request has been marked as complete. Thank you for your feedback.</p>
+              <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }} 
                   animate={{ width: "100%" }} 
-                  transition={{ duration: 1.5 }}
+                  transition={{ duration: 1, ease: "easeInOut" }}
                   className="h-full bg-emerald-500"
                 />
               </div>
@@ -148,16 +168,16 @@ const handleResolve = async () => {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="bg-zinc-900/80 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-amber-500/30 text-center"
+              className="bg-white dark:bg-slate-900 shadow-2xl rounded-2xl border border-slate-200 dark:border-slate-800 p-10 text-center"
             >
-              <Clock className="w-16 h-16 text-amber-400 mx-auto mb-6 animate-pulse" />
-              <h1 className="text-2xl font-black text-white mb-2 uppercase tracking-widest italic">Standby...</h1>
-              <p className="text-zinc-400">Our team is still processing your request. We'll update you as soon as possible.</p>
+              <Clock className="w-12 h-12 text-amber-500 mx-auto mb-6" />
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Status Updated</h1>
+              <p className="text-slate-600 dark:text-slate-400">We have notified the agent that the issue requires further attention. You'll receive an update shortly.</p>
               <button 
                 onClick={() => setStatus("confirm")} 
-                className="mt-8 text-zinc-500 hover:text-white flex items-center gap-2 mx-auto transition-colors"
+                className="mt-8 inline-flex items-center gap-2 text-blue-600 font-semibold hover:text-blue-700 transition-colors"
               >
-                <ArrowLeft className="w-4 h-4" /> Return to Status
+                <ArrowLeft className="w-4 h-4" /> Return to Ticket
               </button>
             </motion.div>
           )}
@@ -169,11 +189,54 @@ const handleResolve = async () => {
               initial="initial"
               animate="animate"
               exit="exit"
-              className="bg-zinc-900/80 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-rose-500/30 text-center"
+              className="bg-white dark:bg-slate-900 shadow-2xl rounded-2xl border border-red-100 dark:border-red-900/30 p-10 text-center"
             >
-              <div className="text-6xl mb-6">⚠️</div>
-              <h1 className="text-2xl font-black text-rose-400 mb-2 uppercase">System Error</h1>
-              <p className="text-zinc-400">Ticket data could not be retrieved from the mainframe.</p>
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Unable to Load</h1>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">We encountered a problem retrieving the ticket data. Please try again or contact support.</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-6 py-2 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-lg font-medium"
+              >
+                Retry Connection
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Professional Modal for Shayari/Messages */}
+        <AnimatePresence>
+          {showPopup && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm z-50 p-4"
+            >
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} 
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-2xl max-w-md w-full text-center shadow-2xl"
+              >
+                <div className="flex justify-center mb-4">
+                   <MessageSquareQuote className="w-10 h-10 text-blue-500/50" />
+                </div>
+                
+                <h2 className="text-slate-900 dark:text-white text-xl font-bold mb-4">
+                  A Final Thought
+                </h2>
+
+                <p className="text-slate-600 dark:text-slate-400 text-base italic leading-relaxed mb-8">
+                  "{shayari || "The resolution is complete, and the system is now operating at peak efficiency."}"
+                </p>
+
+                <button
+                  onClick={() => setShowPopup(false)}
+                  className="w-full py-3 bg-slate-900 dark:bg-white dark:text-slate-900 text-white rounded-xl font-bold hover:opacity-90 transition-opacity"
+                >
+                  Dismiss
+                </button>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
