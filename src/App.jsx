@@ -153,7 +153,7 @@ function App() {
   const { loading } = useAuth();
   const navigate = useNavigate();
   const socketRef = useRef(null);
-  const Navigate = useNavigate();
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -198,7 +198,8 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/verify/:staffId" element={<VerifyStaffPage />} />
 <Route path="/ticket/:id" element={<ResolveTicket />} />
-<Route path="/ticket/:id" element={<Navigate to="/resolve-ticket/:id" replace />} />          <Route path="/support" element={<Support />} />
+<Route path="/resolve-ticket/:id" element={<ResolveTicket />} />
+          <Route path="/support" element={<Support />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/docs" element={<Docs />} />
