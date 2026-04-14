@@ -2,9 +2,12 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function TicketDetails() {
   const { id } = useParams();   // ✅ FIX HERE
+  const navigate = useNavigate();
+
   const [ticket, setTicket] = useState(null);
   const [comment, setComment] = useState("");
   const token = localStorage.getItem("token");
