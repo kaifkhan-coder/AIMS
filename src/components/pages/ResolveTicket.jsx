@@ -38,8 +38,8 @@ export default function ResolveTicket() {
       });
 
       // LLM Shayari call - styled as a closing thought
-      const res = await api.get(`/incidents/shayari`);
-      setShayari(res.data.shayari);
+const res = await api.get(`/incidents/${id}/shayari`);
+setShayari(res.data.shayari);
 
       setShowPopup(true);
       setStatus("success");
