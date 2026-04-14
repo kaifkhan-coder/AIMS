@@ -197,7 +197,7 @@ function App() {
           <Route path="/verify-otp-admin" element={<VerifyOTPAdmin />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/verify/:staffId" element={<VerifyStaffPage />} />
-{/* <Route path="/resolve/:id" element={<ResolveTicket />} /> */}
+<Route path="/ticket/:id" element={<ResolveTicket />} />
 <Route path="/resolve-ticket/:id" element={<ResolveTicket />} />
           <Route path="/support" element={<Support />} />
           <Route path="/contact" element={<Contact />} />
@@ -205,6 +205,7 @@ function App() {
           <Route path="/docs" element={<Docs />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
+          <Route path="*" element={<div>404 - Page Not Found</div>} />
           {/* Super Admin */}
           <Route
             path="/super-dashboard"
