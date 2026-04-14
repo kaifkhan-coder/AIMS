@@ -31,23 +31,30 @@ export default function ResolveTicket() {
       .catch(() => setStatus("error"));
   }, [id]);
 
-  const handleResolve = async () => {
-    try {
-      await api.put(`/incidents/${id}/status`, {
-        status: "Resolved"
-      });
+const handleResolve = async () => {
+  try {
+    // 1. Mark ticket as resolved (IMPORTANT: use correct route)
+    await api.put(`/incidents/${id}/status`, {
+      status: "Resolved",
+    });
 
-      // LLM Shayari call - styled as a closing thought
-const res = await api.get(`/incidents/${id}/shayari`);
-setShayari(res.data.shayari);
+    // 2. Get shayari
+    const res = await api.get(`/incidents/${id}/shayari`);
 
-      setShowPopup(true);
-      setStatus("success");
+    // 3. Set shayari FIRST
+    setShayari(res.data.shayari);
 
-    } catch (err) {
-      setStatus("error");
-    }
-  };
+    // 4. THEN show popup
+    setShowPopup(true);
+
+    // 5. Update UI state
+    setStatus("success");
+
+  } catch (err) {
+    console.error(err);
+    setStatus("error");
+  }
+};
 
   const cardVariants = {
     initial: { opacity: 0, y: 10, scale: 0.98 },
