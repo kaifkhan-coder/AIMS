@@ -153,7 +153,7 @@ function App() {
   const { loading } = useAuth();
   const navigate = useNavigate();
   const socketRef = useRef(null);
-
+  const Navigate = useNavigate();
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
