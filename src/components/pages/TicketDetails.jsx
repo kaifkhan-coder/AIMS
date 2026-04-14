@@ -1,38 +1,29 @@
-import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 
-export default function TicketDetails() {
-  const { id } = useParams();   // ✅ FIX HERE
-  const navigate = useNavigate();
-
+export default function TicketDetails({ ticketId, onStatusChange }) {
   const [ticket, setTicket] = useState(null);
   const [comment, setComment] = useState("");
   const token = localStorage.getItem("token");
 
   const fetchTicket = async () => {
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/incidents/${id}`, // ✅ FIX HERE
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTicket(res.data);
-    } catch (err) {
-      console.log("Fetch error:", err);
-    }
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/api/incidents/${ticketId}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setTicket(res.data);
   };
 
   useEffect(() => {
-    if (id) fetchTicket();   // ✅ prevent undefined call
-  }, [id]);
+    fetchTicket();
+  }, [ticketId]);
 
   const addComment = async () => {
     if (!comment.trim()) return;
 
     await axios.post(
-      `${import.meta.env.VITE_API_URL}/api/incidents/${id}/comment`,
+      `${import.meta.env.VITE_API_URL}/api/incidents/${ticketId}/comment`,
       { message: comment },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -113,9 +104,6 @@ export default function TicketDetails() {
           >
             Add Comment
           </button>
-          <button onClick={() => navigate(`/resolve/${id}`)}>
-  Resolve Ticket
-</button>
         </div>
       </div>
     </motion.div>
