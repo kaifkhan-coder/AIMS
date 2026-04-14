@@ -198,14 +198,8 @@ function App() {
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/verify/:staffId" element={<VerifyStaffPage />} />
 <Route path="/resolve/:id" element={<ResolveTicket />} />
-<Route
-  path="/resolve-ticket/:id"
-  element={
-    <ProtectedRoute>
-      <ResolveTicket />
-    </ProtectedRoute>
-  }
-/>          <Route path="/support" element={<Support />} />
+<Route path="/resolve-ticket/:id" element={<ResolveTicket />} />
+          <Route path="/support" element={<Support />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/docs" element={<Docs />} />
