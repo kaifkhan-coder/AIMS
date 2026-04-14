@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { MessageCircle, Send, X, Ticket, Loader2, Bot, User, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { clsx, type ClassValue } from "clsx";
+import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import api from "../../services/api";
 
-function cn(...inputs: ClassValue[]) {
+function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
@@ -17,52 +17,73 @@ export default function Chatbot() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [showTicket, setShowTicket] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef(null);
 
-  // Auto-scroll to bottom
+  // ✅ FIXED: inside component
+  useEffect(() => {
+    if (!localStorage.getItem("userId")) {
+      localStorage.setItem("userId", "user_" + Date.now());
+    }
+  }, []);
+
+  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
 
-  const sendMessage = async (e?: React.FormEvent) => {
+  const sendMessage = async (e) => {
     if (e) e.preventDefault();
     if (!input.trim() || loading) return;
 
     const userMsg = { sender: "user", text: input, timestamp: new Date() };
     setMessages(prev => [...prev, userMsg]);
+
+    const botPlaceholder = { sender: "bot", text: "", timestamp: new Date() };
+    setMessages(prev => [...prev, botPlaceholder]);
+
     setInput("");
     setLoading(true);
     setShowTicket(false);
 
     try {
-      const res = await api.post("/chatbot/chat", {
-        message: userMsg.text
-      });
+const response = await fetch(
+  `${import.meta.env.VITE_API_URL}/api/chatbot/chat-stream`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      message: userMsg.text,
+      userId: localStorage.getItem("userId") || "guest"
+    }),
+  }
+);
 
-      if (res.data.type === "solution") {
-        const newMsgs = [];
-        res.data.solutions.forEach(sol => {
-          newMsgs.push({ sender: "bot", text: sol.title, timestamp: new Date() });
-          sol.steps.forEach(step => {
-            newMsgs.push({ sender: "bot", text: "👉 " + step, timestamp: new Date() });
-          });
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      let botText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        botText += decoder.decode(value);
+
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1].text = botText;
+          return updated;
         });
-        setMessages(prev => [...prev, ...newMsgs]);
       }
 
-      if (res.data.type === "ai") {
-        setMessages(prev => [
-          ...prev,
-          { sender: "bot", text: res.data.answer, timestamp: new Date() }
-        ]);
-        if (res.data.askTicket) setShowTicket(true);
-      }
     } catch (err) {
       setMessages(prev => [
         ...prev,
-        { sender: "bot", text: "❌ I'm having trouble connecting to the server. Please try again later.", timestamp: new Date() }
+        { sender: "bot", text: "❌ Streaming failed", timestamp: new Date() }
       ]);
     }
 
@@ -77,7 +98,7 @@ export default function Chatbot() {
 
       const res = await api.post("/chatbot/create-ticket", {
         message: lastUserMessage || "User requested ticket support",
-        userId: localStorage.getItem("userId")
+        userId: localStorage.getItem("userId") || "guest"
       });
 
       setMessages(prev => [
