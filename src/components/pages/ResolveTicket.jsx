@@ -51,7 +51,7 @@ useEffect(() => {
 const handleResolve = async () => {
   try {
     // ✅ Public route (no login required)
-    await api.get(`/incidents/resolve/${id}`);
+    await api.put(`/incidents/resolve/${id}`);
 
     // Shayari
     const res = await api.get(`/incidents/${id}/shayari`);
