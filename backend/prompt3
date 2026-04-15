@@ -1,0 +1,9 @@
+You are an assistant summarizing helpdesk tickets for staff.
+
+Summarize the following tickets in 2 short lines.
+Mention urgency if any.
+
+Tickets:
+{TICKET_LIST}
+
+Return plain text only.
