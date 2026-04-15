@@ -22,32 +22,42 @@ export default function ResolveTicket() {
   const [showPopup, setShowPopup] = useState(false);
   const [shayari, setShayari] = useState("");
 
-  useEffect(() => {
-    api.get(`/incidents/${id}`)
-      .then(res => {
-        setTicket(res.data);
+useEffect(() => {
+  api.get(`/incidents/${id}`)
+    .then(async (res) => {
+      setTicket(res.data);
+
+      if (res.data.status === "Resolved") {
+
+        // ✅ If shayari already exists → use it
+        if (res.data.closingShayari) {
+          setShayari(res.data.closingShayari);
+        } else {
+          // ✅ Otherwise generate it
+          const shayariRes = await api.get(`/incidents/${id}/shayari`);
+          setShayari(shayariRes.data.shayari);
+        }
+
+        setShowPopup(true);
+        setStatus("success");
+
+      } else {
         setStatus("confirm");
-      })
-      .catch(() => setStatus("error"));
-  }, [id]);
+      }
+    })
+    .catch(() => setStatus("error"));
+}, [id]);
 
 const handleResolve = async () => {
   try {
-    // 1. Mark ticket as resolved (IMPORTANT: use correct route)
-    await api.put(`/incidents/${id}/status`, {
-      status: "Resolved",
-    });
+    // ✅ Public route (no login required)
+    await api.get(`/incidents/resolve/${id}`);
 
-    // 2. Get shayari
+    // Shayari
     const res = await api.get(`/incidents/${id}/shayari`);
 
-    // 3. Set shayari FIRST
     setShayari(res.data.shayari);
-
-    // 4. THEN show popup
     setShowPopup(true);
-
-    // 5. Update UI state
     setStatus("success");
 
   } catch (err) {
