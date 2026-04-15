@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 import { Terminal, Cpu, Shield, Code2, Github, Linkedin, Mail, ExternalLink } from 'lucide-react';
 
 const team = [
-//   {
-//     name: "Kaif Khan",
-//     role: "Full Stack Developer",
-//     bio: "Specializing in building scalable distributed systems and high-performance web architectures with a focus on user experience.",
-//     skills: ["React", "Node.js", "JavaScript", "MongoDB", "AI Integration", "Socket.io", "MERN Stack"],
-//     social: { github: "https://github.com/kaifkhan-coder", linkedin: "https://linkedin.com/in/kaifkhan", email: "mailto:kaifkhancom551@gmail.com" }
-//   }
+  {
+    name: "Kaif Khan",
+    role: "Full Stack Developer",
+    bio: "Specializing in building scalable distributed systems and high-performance web architectures with a focus on user experience.",
+    skills: ["React", "Node.js", "JavaScript", "MongoDB", "AI Integration", "Socket.io", "MERN Stack"],
+    social: { github: "https://github.com/kaifkhan-coder", linkedin: "https://linkedin.com/in/kaifkhan", email: "mailto:kaifkhancom551@gmail.com" }
+  }
 ];
 
 const systemStats = [
