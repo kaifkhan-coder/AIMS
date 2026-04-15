@@ -37,6 +37,9 @@ const registerSchema = z.object({
     .min(6, "Password must be at least 6 characters"),
 
   role: z.string().default("user"),
+  terms: z.boolean().refine((val) => val === true, {
+    message: "You must accept the terms and conditions"
+  })
 });
 const getPasswordStrength = (password) => {
   let score = 0;
@@ -169,6 +172,7 @@ export default function Register() {
     email: "",
     password: "",
     role: "user",
+    terms: false,
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -178,8 +182,8 @@ export default function Register() {
   const strength = getPasswordStrength(form.password);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value, checked, type } = e.target;
+    setForm((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
 
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
@@ -369,12 +373,38 @@ export default function Register() {
               </motion.p>
             )}
           </AnimatePresence>
+          <motion.div
+  variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}
+  className="flex items-start gap-2 mt-2"
+>
+  <input
+    type="checkbox"
+    name="terms"
+    checked={form.terms}
+    onChange={handleChange}
+    className="mt-1 accent-cyan-400 w-4 h-4"
+  />
 
+  <p className="text-sm text-slate-400">
+    I agree to{" "}
+    <span 
+    onClick={() => navigate("/terms")}
+    className="text-cyan-400 cursor-pointer hover:underline">
+      Terms & Conditions
+    </span>
+  </p>
+</motion.div>
+
+{errors.terms && (
+  <p className="text-xs text-pink-400 ml-1">
+    {errors.terms}
+  </p>
+)}
           <motion.div variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }} className="pt-2">
             <motion.button
+            disabled={loading || !form.terms}
               whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(168,85,247,0.4)" }}
               whileTap={{ scale: 0.98 }}
-              disabled={loading}
               className="relative w-full py-3.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold uppercase tracking-wider flex justify-center items-center gap-2 overflow-hidden group"
             >
               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />
@@ -387,7 +417,6 @@ export default function Register() {
               )}
             </motion.button>
           </motion.div>
-
           <motion.div
             variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}
             className="text-center mt-6"

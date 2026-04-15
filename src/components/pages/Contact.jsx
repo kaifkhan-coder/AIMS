@@ -74,7 +74,7 @@ export default function Contact() {
             {[ 
               { icon: <Mail className="w-5 h-5" />, title: "Email Us", detail: "khakaifcom551@gmail.com" },
               { icon: <Phone className="w-5 h-5" />, title: "Call Us", detail: "+91 9326865425" },
-              { icon: <MapPin className="w-5 h-5" />, title: "Visit Us", detail: "Kurla, Mumbai" },
+              { icon: <MapPin className="w-5 h-5" />, title: "Visit Us", detail: "Byculla, Mumbai" },
               { icon: <Globe className="w-5 h-5" />, title: "Global", detail: "In M.H Saboo Siddik College of Engineering" }
             ].map((item, i) => (
               <motion.div 
@@ -219,7 +219,7 @@ export default function Contact() {
            <MessageCircle className="w-6 h-6" />
            <span className="absolute top-0 right-0 w-2 h-2 bg-indigo-500 rounded-full animate-ping" />
         </div>
-        <span className="font-bold text-sm tracking-tight">Live Support</span>
+        {/* <span className="font-bold text-sm tracking-tight">Live Support</span> */}
       </motion.a>
     </div>
   );

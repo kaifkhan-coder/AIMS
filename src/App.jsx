@@ -205,7 +205,6 @@ function App() {
           <Route path="/docs" element={<Docs />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
-          <Route path="*" element={<div>404 - Page Not Found</div>} />
           {/* Super Admin */}
           <Route
             path="/super-dashboard"

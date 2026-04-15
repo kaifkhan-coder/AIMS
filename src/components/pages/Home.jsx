@@ -1098,11 +1098,11 @@ export default function Home() {
             </span>
           </div>
           
-          <div className="hidden md:flex items-center gap-8 text-[10px] font-black tracking-[0.3em] uppercase italic text-[#05d9e8]/60">
+          {/* <div className="hidden md:flex items-center gap-8 text-[10px] font-black tracking-[0.3em] uppercase italic text-[#05d9e8]/60">
             <a href="#" className="hover:text-[#05d9e8] transition-colors">Network</a>
             <a href="#" className="hover:text-[#05d9e8] transition-colors">Database</a>
             <a href="#" className="hover:text-[#05d9e8] transition-colors">Security</a>
-          </div>
+          </div> */}
 
           <div className="flex gap-4">
             <Link to="/login" className="px-5 py-2 text-xs font-black uppercase italic tracking-widest text-[#05d9e8] hover:bg-[#05d9e8]/10 transition-all border border-[#05d9e8]/20">
@@ -1180,7 +1180,7 @@ export default function Home() {
 
             <motion.div variants={itemVariants} className="mt-16 flex items-center gap-6">
               <div className="flex -space-x-4">
-                {['K', 'A', 'M', 'S'].map((n, i) => (
+                {['K', 'D', 'S', 'A'].map((n, i) => (
                   <motion.div
                     key={i}
                     whileHover={{ y: -10, scale: 1.1 }}
@@ -1294,9 +1294,9 @@ export default function Home() {
             <p className="text-white/20 text-[10px] font-mono uppercase tracking-widest">
               © {new Date().getFullYear()} AUTOMATED INCIDENT MANAGEMENT SYSTEM 
             </p>
-            <p className="text-[#05d9e8]/40 text-xs font-black italic uppercase tracking-widest">
+              {/* <p className="text-[#05d9e8]/40 text-xs font-black italic uppercase tracking-widest">
               Developed by Khan Mohammed Kaif
-            </p>
+            </p> */}
           </div>
 
           <div className="mt-12 flex justify-center gap-2">

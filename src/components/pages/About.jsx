@@ -3,18 +3,18 @@ import { motion } from 'framer-motion';
 import { Terminal, Cpu, Shield, Code2, Github, Linkedin, Mail, ExternalLink } from 'lucide-react';
 
 const team = [
-  {
-    name: "Kaif Khan",
-    role: "Full Stack Developer",
-    bio: "Specializing in building scalable distributed systems and high-performance web architectures with a focus on user experience.",
-    skills: ["React", "Node.js", "JavaScript", "MongoDB", "AI Integration", "Socket.io", "MERN Stack"],
-    social: { github: "https://github.com/kaifkhan-coder", linkedin: "https://linkedin.com/in/kaifkhan", email: "mailto:kaifkhancom551@gmail.com" }
-  }
+//   {
+//     name: "Kaif Khan",
+//     role: "Full Stack Developer",
+//     bio: "Specializing in building scalable distributed systems and high-performance web architectures with a focus on user experience.",
+//     skills: ["React", "Node.js", "JavaScript", "MongoDB", "AI Integration", "Socket.io", "MERN Stack"],
+//     social: { github: "https://github.com/kaifkhan-coder", linkedin: "https://linkedin.com/in/kaifkhan", email: "mailto:kaifkhancom551@gmail.com" }
+//   }
 ];
 
 const systemStats = [
   { label: "System Status", value: "Operational", icon: Cpu, color: "text-green-400" },
-  { label: "Security Level", value: "Class-A", icon: Shield, color: "text-blue-400" },
+  { label: "Security Level", value: "Class-B", icon: Shield, color: "text-blue-400" },
   { label: "Build Version", value: "v2.0.4-stable", icon: Terminal, color: "text-[#05d9e8]" },
 ];
 

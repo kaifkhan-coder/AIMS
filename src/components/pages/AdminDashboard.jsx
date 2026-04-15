@@ -2125,13 +2125,13 @@ return () => {
 </div>
 
 {/* QR Code - separate row */}
-<div className="mt-3 flex justify-center">
+{/* <div className="mt-3 flex justify-center">
   {s.qrCode ? (
     <img src={s.qrCode} alt="Staff QR" className="w-24 h-24 rounded-lg" />
   ) : (
     <p className="text-xs text-slate-500">No QR</p>
   )}
-</div>
+</div> */}
                       <div className="mt-4 flex justify-end gap-4">
                         <button onClick={() => handleEdit(s)} className="text-indigo-400 hover:text-indigo-300">
                           <Pencil className="w-4 h-4" />
@@ -2188,7 +2188,7 @@ return () => {
                       <th className="px-6 py-4">Assigned</th>
                       <th className="px-6 py-4">SLA</th>
                       <th className="px-6 py-4">Actions</th>
-                      <th className="px-6 py-4">QR Code</th>
+                      {/* <th className="px-6 py-4">QR Code</th> */}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
@@ -2236,13 +2236,13 @@ return () => {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        {/* <td className="px-6 py-4">
   {t.qrCode ? (
     <img src={t.qrCode} alt="Ticket QR" className="w-12 h-12" />
   ) : (
     <span className="text-slate-500 text-xs">No QR</span>
   )}
-</td>
+</td> */}
                       </tr>
                     ))}
                   </tbody>
