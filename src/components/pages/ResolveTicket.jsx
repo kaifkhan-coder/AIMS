@@ -50,13 +50,9 @@ useEffect(() => {
 
 const handleResolve = async () => {
   try {
-    // ✅ Public route (no login required)
-    await api.put(`/incidents/resolve/${id}`);
+    const res = await api.put(`/incidents/resolve/${id}`);
 
-    // Shayari
-    const res = await api.get(`/incidents/${id}/shayari`);
-
-    setShayari(res.data.shayari);
+    setShayari(res.data.shayari); // ✅ directly from backend
     setShowPopup(true);
     setStatus("success");
 
