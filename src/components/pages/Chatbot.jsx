@@ -59,9 +59,11 @@ const response = await fetch(
       message: userMsg.text,
       userId: localStorage.getItem("userId") || "guest"
     }),
-  }
+  },
 );
-
+if (!response.ok) {
+  throw new Error("Network response was not ok");
+}
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
