@@ -50,9 +50,9 @@ useEffect(() => {
 
 const handleResolve = async () => {
   try {
-    const res = await api.put(`/incidents/resolve/${id}`);
+    const res = await api.put(`/incidents/${id}/resolve`);
 
-    setShayari(res.data.shayari); // ✅ directly from backend
+    setShayari(res.data.shayari);
     setShowPopup(true);
     setStatus("success");
 
@@ -61,6 +61,18 @@ const handleResolve = async () => {
     setStatus("error");
   }
 };
+//   try {
+//     const res = await api.put(`/incidents/${id}/resolve`);
+
+//     setShayari(res.data.shayari); // ✅ directly from backend
+//     setShowPopup(true);
+//     setStatus("success");
+
+//   } catch (err) {
+//     console.error(err);
+//     setStatus("error");
+//   }
+// };
 
   const cardVariants = {
     initial: { opacity: 0, y: 10, scale: 0.98 },
