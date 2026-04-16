@@ -490,8 +490,6 @@ router.get("/", (req, res) => {
 
 router.put(
   "/resolve/:id",
-  protect,
-  roleCheck("admin", "staff", "super_admin"),
   markResolvedWithShayari
 );
 
