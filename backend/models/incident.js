@@ -178,7 +178,12 @@ attachment: {
       type: String,
       default: "USER",
     },
-
+    otp: String,
+    otpExpires: Date,
+    otpVerified: {
+      type: Boolean,
+      default: false,
+    },
     resolvedAt: {
       type: Date,
       default: null,

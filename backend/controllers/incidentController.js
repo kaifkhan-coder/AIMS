@@ -1010,4 +1010,180 @@ export const getAssignedTickets = async (req, res) => {
   }
 };
 
-export default markResolvedWithShayari;
+export const sendResolutionOTP = async (req, res) => {
+  try {
+    const incident = await Incident.findById(req.params.id).populate("createdBy");
+
+    if (!incident) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    // 🔢 Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    incident.otp = otp;
+    incident.otpExpires = Date.now() + 5 * 60 * 1000; // 5 min
+    incident.otpVerified = false;
+
+    await incident.save();
+
+    // 📧 Send email
+await sendEmail(
+  incident.createdBy.email,
+  "🔐 Ticket Resolution OTP",
+  `
+  <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+      
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 20px; text-align: center;">
+        <h2 style="color: #ffffff; margin: 0;">🔐 OTP Verification</h2>
+        <p style="color: #e0e7ff; margin-top: 5px;">Secure Ticket Closure</p>
+      </div>
+
+      <!-- Body -->
+      <div style="padding: 30px; text-align: center;">
+        <p style="font-size: 16px; color: #333;">
+          Hello <strong>${incident.createdBy.full_name || "User"}</strong>,
+        </p>
+
+        <p style="font-size: 14px; color: #555; margin-top: 10px;">
+          Your support ticket has been marked as <strong>Resolved</strong>.
+          To confirm and close the ticket, please use the OTP below:
+        </p>
+
+        <!-- OTP BOX -->
+        <div style="margin: 25px 0;">
+          <span style="display: inline-block; font-size: 28px; letter-spacing: 5px; font-weight: bold; color: #4f46e5; background: #eef2ff; padding: 12px 25px; border-radius: 8px;">
+            ${otp}
+          </span>
+        </div>
+
+        <p style="font-size: 13px; color: #888;">
+          ⏳ This OTP is valid for <strong>5 minutes</strong>.
+        </p>
+
+        <p style="font-size: 13px; color: #888; margin-top: 15px;">
+          If you did not request this, please ignore this email.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div style="background: #f9fafb; padding: 15px; text-align: center; font-size: 12px; color: #999;">
+        © ${new Date().getFullYear()} Incident Management System <br/>
+        Need help? Contact support team.
+      </div>
+
+    </div>
+  </div>
+  `
+);
+
+    res.json({ message: "OTP sent successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to send OTP" });
+  }
+};
+
+export const verifyResolutionOTP = async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    const incident = await Incident.findById(req.params.id);
+
+    if (!incident) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+
+    if (incident.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    if (Date.now() > incident.otpExpires) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    incident.otpVerified = true;
+    incident.status = "Closed";
+
+    await incident.save();
+
+    res.json({ message: "Ticket closed successfully" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "OTP verification failed" });
+  }
+};
+export const resendOtp = async (req, res) => {
+  try {
+    const incident = await Incident.findById(req.params.id).populate("createdBy");
+    if (!incident) {
+      return res.status(404).json({ message: "Ticket not found" });
+    }
+    if (incident.status !== "Resolved") {
+      return res.status(400).json({ message: "OTP can only be sent for resolved tickets" });
+    }
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    incident.otp = otp;
+    incident.otpExpires = Date.now() + 5 * 60 * 1000;
+    incident.otpVerified = false;
+    await incident.save();
+await sendEmail(
+  incident.createdBy.email,
+  "🔐 Resend Ticket Resolution OTP",
+  `
+  <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+      
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 20px; text-align: center;">
+        <h2 style="color: #ffffff; margin: 0;">🔐 OTP Verification</h2>
+        <p style="color: #e0e7ff; margin-top: 5px;">Secure Ticket Closure</p>
+      </div>
+
+      <!-- Body -->
+      <div style="padding: 30px; text-align: center;">
+        <p style="font-size: 16px; color: #333;">
+          Hello <strong>${incident.createdBy.full_name || "User"}</strong>,
+        </p>
+
+        <p style="font-size: 14px; color: #555; margin-top: 10px;">
+          Your support ticket has been marked as <strong>Resolved</strong>.
+          To confirm and close the ticket, please use the OTP below:
+        </p>
+
+        <!-- OTP BOX -->
+        <div style="margin: 25px 0;">
+          <span style="display: inline-block; font-size: 28px; letter-spacing: 5px; font-weight: bold; color: #4f46e5; background: #eef2ff; padding: 12px 25px; border-radius: 8px;">
+            ${otp}
+          </span>
+        </div>
+
+        <p style="font-size: 13px; color: #888;">
+          ⏳ This OTP is valid for <strong>5 minutes</strong>.
+        </p>
+
+        <p style="font-size: 13px; color: #888; margin-top: 15px;">
+          If you did not request this, please ignore this email.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div style="background: #f9fafb; padding: 15px; text-align: center; font-size: 12px; color: #999;">
+        © ${new Date().getFullYear()} Incident Management System <br/>
+        Need help? Contact support team.
+      </div>
+
+    </div>
+  </div>
+  `
+);
+    res.json({ message: "OTP resent successfully" });
+  }
+    catch (err) {
+    console.error(err);    res.status(500).json({ message: "Failed to resend OTP" });
+  } 
+};

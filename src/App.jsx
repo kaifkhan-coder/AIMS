@@ -186,7 +186,6 @@ function App() {
 
       {/* ✅ Suspense wrapper */}
       {/* <Suspense fallback={<div className="text-center p-10">Loading page...</div>}> */}
-        <Suspense fallback={<SkeletonPage />} >
 
         <Routes>
           {/* Public */}
@@ -252,7 +251,6 @@ function App() {
           {/* System */}
           <Route path="/system-status" element={<LiveSystemStatus />} />
         </Routes>
-      </Suspense>
       <Chatbot />
     </>
   );

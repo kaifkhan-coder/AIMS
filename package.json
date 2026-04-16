@@ -4,32 +4,34 @@
   "private": true,
   "type": "module",
   "main": "electron.js",
-"scripts": {
-  "dev": "vite",
-  "build": "vite build",
-  "preview": "vite preview",
-  "electron": "electron .",
-  "start": "concurrently \"vite\" \"electron .\"",
-  "dist": "electron-builder"
-},
-"build": {
-  "appId": "com.aims.app",
-  "productName": "AIMS Support System",
-  "directories": {
-    "output": "dist_electron"
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "start": "concurrently \"vite\" \"electron .\"",
+    "dist": "electron-builder"
   },
-  "files": [
-    "dist/**/*",
-    "electron.js"
-  ],
-  "win": {
-    "target": "nsis",
-    "icon": "assets/icon.ico"
-  }
-},
+  "build": {
+    "appId": "com.aims.app",
+    "productName": "AIMS Support System",
+    "directories": {
+      "output": "dist_electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron.js"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    }
+  },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
-    "axios": "^1.13.6",
+    "axios": "^1.15.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",
     "gsap": "^3.14.2",
     "jwt-decode": "^4.0.0",
@@ -38,7 +40,7 @@
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.71.2",
     "react-hot-toast": "^2.6.0",
-    "react-router-dom": "^7.11.0",
+    "react-router-dom": "^7.14.1",
     "rechart": "^0.0.1",
     "recharts": "^3.6.0",
     "socket.io-client": "^4.8.3",

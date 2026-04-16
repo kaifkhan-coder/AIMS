@@ -27,7 +27,7 @@ export default function Contact() {
       setForm({ name: "", email: "", message: "" });
       setTimeout(() => setIsSuccess(false), 5000);
     } catch (err) {
-      alert("Something went wrong. Please try again.");
+      Toast.error("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
