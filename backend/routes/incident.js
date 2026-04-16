@@ -463,7 +463,7 @@ import {
   getRootCause,
   approveCloseIncident,
   rejectCloseIncident,
-  markResolved, // old one, keep for reference
+  markResolved
 } from "../controllers/incidentController.js";
 
 import { adminOnly, protect, roleCheck } from "../middleware/autMiddleware.js";
@@ -487,11 +487,6 @@ const upload = multer({ storage });
 router.get("/", (req, res) => {
   res.json({ message: "Incidents API Working ✅" });
 });
-
-router.put(
-  "/resolve/:id",
-  markResolvedWithShayari
-);
 
 // attachments
 router.get("/attachment/:filename", protect, async (req, res) => {
