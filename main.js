@@ -1,21 +1,34 @@
-// import { app, BrowserWindow } from "electron";
+// const { app, BrowserWindow } = require("electron");
+import { app, BrowserWindow } from "electron";
+// const path = require("path");
+import path from "path";
+// const { spawn } = require("child_process");
+import { spawn } from "child_process";
 
-// function createWindow() {
-//   const win = new BrowserWindow({
-//     width: 1200,
-//     height: 800,
-//   });
+let backend;
 
-//   win.loadURL("https://aims-5k31.vercel.app").catch(err => {
-//     console.error("Load URL Error:", err);
-//   });
+function startBackend() {
+  backend = spawn("node", ["server/index.js"], {
+    shell: true,
+  });
 
-//   win.webContents.on("did-fail-load", () => {
-//     console.warn("Vercel load failed, trying localhost...");
-//     win.loadURL("http://localhost:5173").catch(err => {
-//       console.error("Load URL Error:", err);
-//     });
-//   });
-// }
+  backend.stdout.on("data", (data) => console.log(`Backend: ${data}`));
+}
 
-// app.whenReady().then(createWindow);
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1200,
+    height: 800,
+  });
+
+  win.loadFile(path.join(__dirname, "../dist/index.html"));
+}
+
+app.whenReady().then(() => {
+  startBackend();
+  createWindow();
+});
+
+app.on("will-quit", () => {
+  if (backend) backend.kill();
+});

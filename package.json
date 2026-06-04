@@ -2,6 +2,8 @@
   "name": "aims2",
   "version": "1.0.0",
   "private": true,
+  "productName": "AIMS Support System",
+  "author": {"name": "Khan Mohammed Kaif"},
   "type": "module",
   "main": "electron.js",
   "scripts": {
@@ -9,8 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "electron": "electron .",
-    "start": "concurrently \"vite\" \"electron .\"",
-    "dist": "electron-builder"
+    "start": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "dist": "npm run build && electron-builder"
   },
   "build": {
     "appId": "com.aims.app",
@@ -18,15 +20,19 @@
     "directories": {
       "output": "dist_electron"
     },
-    "files": [
-      "dist/**/*",
-      "electron.js"
-    ],
+"files": [
+  "dist/**/*",
+  "electron.js",
+  "package.json",
+  {
+  "description": "AI Incident Management System for ticket tracking and support management"
+}
+],
     "win": {
-      "target": "nsis",
-      "icon": "assets/icon.ico"
+      "target": "nsis"
     }
   },
+  
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "axios": "^1.15.0",
@@ -45,6 +51,7 @@
     "recharts": "^3.6.0",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.5.0",
+    "wait-on": "^9.0.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {
