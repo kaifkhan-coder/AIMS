@@ -1,14 +1,14 @@
-// const { app, BrowserWindow } = require("electron");
 import { app, BrowserWindow } from "electron";
-// const path = require("path");
 import path from "path";
-// const { spawn } = require("child_process");
+import { fileURLToPath } from "url";
 import { spawn } from "child_process";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 let backend;
 
 function startBackend() {
-  backend = spawn("node", ["server/index.js"], {
+  backend = spawn("node", ["backend/server.js"], {
     shell: true,
   });
 
