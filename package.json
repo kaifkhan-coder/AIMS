@@ -1,11 +1,12 @@
 {
   "name": "aims2",
   "version": "1.0.0",
+  "description": "AI Incident Management System for ticket tracking and support management",
   "private": true,
   "productName": "AIMS Support System",
   "author": {"name": "Khan Mohammed Kaif"},
   "type": "module",
-  "main": "electron.js",
+  "main": "electron.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -22,12 +23,9 @@
     },
 "files": [
   "dist/**/*",
-  "electron.js",
+  "electron.cjs",
   "package.json",
-  "server/**/*",
-  {
-  "description": "AI Incident Management System for ticket tracking and support management"
-}
+  "server/**/*"
 ],
     "win": {
       "target": "nsis"
