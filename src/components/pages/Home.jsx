@@ -1112,7 +1112,7 @@ export default function Home() {
               Initialize
             </Link>
 <a
-  href="https://github.com/kaifkhan-coder/AIMS/releases/download/v1.0.0/AIMS.Support.System.Setup.1.0.0.exe"
+  href="https://github.com/kaifkhan-coder/AIMS/releases/download/v1.0.1/AIMS.Support.System.Setup.1.0.0.exe"
   className="bg-blue-600 text-white px-4 py-2 rounded"
 >
   Download Desktop App 💻
